@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Alumno</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            margin: 15px 0;
+        }
+
+        .sidebar a:hover {
+            background-color: #34495e;
+            padding-left: 5px;
+        }
+
+        .contenido {
+            flex: 1;
+            padding: 40px;
+            background-color: #ecf0f1;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Menú lateral -->
+    <div class="sidebar">
+        <h2>Alumno</h2>
+        <a href="#">Inicio</a>
+        <a href="#">Mis cursos</a>
+        <a href="#">Pagos</a>
+        <a href="index.html">Cerrar sesión</a>
+    </div>
+
+    <!-- Contenido -->
+    <div class="contenido">
+        <h1>Bienvenido Alumno 👋</h1>
+
+        <div class="card">
+            <h3>Datos personales</h3>
+            <p><strong>Nombre:</strong> Alumno Demo</p>
+            <p><strong>Matrícula:</strong> 2024001</p>
+            <p><strong>Correo:</strong> alumno@email.com</p>
+        </div>
+
+        <div class="card">
+            <h3>Mis cursos</h3>
+            <ul>
+                <li>Base de Datos</li>
+                <li>Programación Web</li>
+                <li>Redes</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Pagos</h3>
+            <p>Último pago: $1500 - Marzo</p>
+            <p>Estado: ✔ Pagado</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
