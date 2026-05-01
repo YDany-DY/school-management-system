@@ -7,7 +7,14 @@ Web application for managing a school system with role-based authentication.
 * Login system with roles (admin, administrative staff, teacher, student)
 * Role-based access control
 * MongoDB database integration
-* Dashboard per user type
+* Dashboard for each user role
+
+## User Roles
+
+- Administrator: Full system control
+- Administrative Staff: Manage students, courses, and records
+- Teacher: Manage courses, tasks, and grades
+- Student: View courses, tasks, and personal progress
 
 ## Technologies
 
@@ -31,7 +38,6 @@ server.js
 package.json
 ```
 
-````markdown
 ## How to run
 ```bash
 npm install
