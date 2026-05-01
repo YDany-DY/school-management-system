@@ -1,2 +1,18 @@
-# school-management-system
-School management system with role-based authentication (admin, administrative staff, teachers and students) using Node.js, Express and MongoDB.
+# School Management System
+
+Web application for managing a school system with role-based authentication.
+
+## Features
+- Login system with roles (admin, administrative staff, teacher, student)
+- Role-based access control
+- MongoDB database integration
+- Dashboard per user type
+
+## Technologies
+- HTML, CSS, JavaScript
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+
+## Project Structure
