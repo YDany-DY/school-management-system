@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Dashboard Personal</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Personal</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_personal" class="active">
+
+<i class="fa-solid fa-house"></i>
+Inicio
+
+</a>
+
+<a href="/alumnos">
+
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+
+</a>
+
+<a href="/maestros">
+
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+
+</a>
+
+<a href="/materias">
+
+<i class="fa-solid fa-book"></i>
+Materias
+
+</a>
+
+<a href="/inscripciones">
+
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+
+</a>
+
+<a href="/grupos">
+
+<i class="fa-solid fa-users"></i>
+Grupos
+
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1 id="bienvenida">Bienvenido</h1>
+
+<p>Panel del personal del sistema escolar</p>
+
+</div>
+
+<div class="profile-icon">
+
+<i class="fa-solid fa-user-tie"></i>
+
+</div>
+
+</div>
+
+<div class="cards-grid" id="permisosCards">
+
+</div>
+
+<div class="tabla-container" id="sinPermisos" style="display:none;">
+
+<h2 style="margin-bottom:15px;">Sin permisos asignados</h2>
+
+<p>Solicita al administrador acceso a los módulos necesarios.</p>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="permisos.js"></script>
+
+<script>
+
+const modulos = {
+    alumnos:{
+        titulo:"Alumnos",
+        href:"/alumnos",
+        icono:"fa-user-graduate"
+    },
+    maestros:{
+        titulo:"Maestros",
+        href:"/maestros",
+        icono:"fa-chalkboard-user"
+    },
+    materias:{
+        titulo:"Materias",
+        href:"/materias",
+        icono:"fa-book"
+    },
+    grupos:{
+        titulo:"Grupos",
+        href:"/grupos",
+        icono:"fa-users"
+    }
+};
+
+fetch("/usuario")
+.then(res => res.json())
+.then(data => {
+
+    document.getElementById("bienvenida").innerText =
+    `Bienvenido ${data.usuario}`;
+
+    const permisos =
+    data.permisos || [];
+
+    const contenedor =
+    document.getElementById("permisosCards");
+
+    if(permisos.length === 0){
+        document.getElementById("sinPermisos").style.display = "block";
+        return;
+    }
+
+    permisos.forEach(permiso => {
+
+        const modulo =
+        modulos[permiso];
+
+        if(!modulo){
+            return;
+        }
+
+        contenedor.innerHTML += `
+        <a class="card module-card" href="${modulo.href}">
+            <i class="fa-solid ${modulo.icono}"></i>
+            <h2>${modulo.titulo}</h2>
+            <p>Gestionar ${modulo.titulo.toLowerCase()}</p>
+        </a>`;
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

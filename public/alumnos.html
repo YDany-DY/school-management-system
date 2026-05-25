@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Gestión de alumnos</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Administrador</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+
+<i class="fa-solid fa-house"></i>
+Inicio
+
+</a>
+
+<a href="/alumnos" class="active">
+
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+
+</a>
+
+<a href="/maestros">
+
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+
+</a>
+
+<a href="/materias">
+
+<i class="fa-solid fa-book"></i>
+Materias
+
+</a>
+
+<a href="/grupos">
+
+<i class="fa-solid fa-users"></i>
+Grupos
+
+</a>
+
+<a href="/personal">
+
+<i class="fa-solid fa-people-group"></i>
+Personal
+
+</a>
+
+<a href="/configuracion">
+
+<i class="fa-solid fa-gear"></i>
+Configuración
+
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<!-- CONTENIDO -->
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1>Gestión de alumnos</h1>
+
+<p>Administrar alumnos del sistema</p>
+
+</div>
+
+<button
+class="add-btn"
+onclick="abrirModal()">
+
+<i class="fa-solid fa-plus"></i>
+Agregar alumno
+
+</button>
+
+</div>
+
+<div id="alumnoMensaje" class="form-feedback"></div>
+
+<!-- TABLA -->
+
+<div class="tabla-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Nombre</th>
+<th>Matrícula</th>
+<th>Carrera</th>
+<th>Semestre</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaAlumnos">
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<h2>Nuevo alumno</h2>
+
+<form id="formAlumno">
+
+<input
+type="text"
+name="nombre"
+placeholder="Nombre"
+required>
+
+<input
+type="text"
+name="matricula"
+placeholder="Matrícula"
+required>
+
+<input
+type="text"
+name="carrera"
+placeholder="Carrera"
+required>
+
+<input
+type="number"
+name="semestre"
+placeholder="Semestre"
+required>
+
+<label>
+
+<input
+type="checkbox"
+name="activo"
+checked>
+
+Alumno activo
+
+</label>
+
+<div class="modal-buttons">
+
+<button
+type="button"
+class="cancel-btn"
+onclick="cerrarModal()">
+
+Cancelar
+
+</button>
+
+<button
+type="submit"
+class="save-btn">
+
+Guardar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<div class="modal" id="credencialModal">
+
+<div class="modal-content">
+
+<h2>Credenciales temporales</h2>
+
+<div class="input-group">
+    <label>Usuario</label>
+    <input type="text" id="credencialUsuario" readonly>
+</div>
+
+<div class="input-group">
+    <label>Contraseña temporal</label>
+    <input type="text" id="credencialPassword" readonly>
+</div>
+
+<button type="button" class="copy-btn" onclick="copiarCredencial()">Copiar contraseña</button>
+
+<button type="button" class="save-btn" onclick="cerrarCredencialModal()">
+
+Cerrar
+
+</button>
+
+</div>
+
+</div>
+
+<script src="permisos.js"></script>
+
+<script>
+
+let alumnoEditando = null;
+
+function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
+
+    const clase =
+    activo ? "active-status" : "inactive-status";
+
+    const texto =
+    activo ? textoActivo : textoInactivo;
+
+    return `
+    <span class="status-badge ${clase}">
+        <i class="fa-solid fa-circle"></i>
+        ${texto}
+    </span>`;
+
+}
+
+// CARGAR ALUMNOS
+
+async function cargarAlumnos(){
+
+    const res =
+    await fetch("/api/alumnos");
+
+    const alumnos =
+    await res.json();
+
+    const tabla =
+    document.getElementById("tablaAlumnos");
+
+    tabla.innerHTML = "";
+
+    alumnos.forEach(alumno => {
+
+        tabla.innerHTML += `
+
+        <tr>
+
+            <td>${alumno.nombre}</td>
+
+            <td>${alumno.matricula}</td>
+
+            <td>${alumno.carrera}</td>
+
+            <td>${alumno.semestre}</td>
+
+            <td>${estadoBadge(alumno.activo !== false)}</td>
+
+            <td>
+
+                <button
+class="edit-btn"
+onclick="editarAlumno(
+'${alumno._id}',
+'${alumno.nombre}',
+'${alumno.matricula}',
+'${alumno.carrera}',
+'${alumno.semestre}',
+${alumno.activo !== false}
+)">
+
+Editar
+
+</button>
+
+<button
+class="reset-btn"
+onclick="resetearContrasenaAlumno('${alumno._id}')">
+
+Reset contraseña
+
+</button>
+
+<button
+class="delete-btn"
+onclick="eliminarAlumno('${alumno._id}')">
+
+Eliminar
+
+</button>
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+// AGREGAR ALUMNO
+
+function mostrarAlumnoMensaje(texto, tipo = "success") {
+    const mensaje = document.getElementById("alumnoMensaje");
+    mensaje.innerText = texto;
+    mensaje.className = `form-feedback ${tipo}`;
+}
+
+function limpiarAlumnoMensaje() {
+    const mensaje = document.getElementById("alumnoMensaje");
+    mensaje.innerText = "";
+    mensaje.className = "form-feedback";
+}
+
+document.getElementById("formAlumno")
+.addEventListener("submit",
+async e => {
+
+    e.preventDefault();
+
+    const form =
+    new FormData(e.target);
+
+    const datos =
+    Object.fromEntries(form);
+
+    datos.activo =
+    form.get("activo") === "on";
+
+    // EDITAR
+
+    if(alumnoEditando){
+
+        await fetch(
+
+        `/api/alumnos/${alumnoEditando}`,
+
+        {
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+        alumnoEditando = null;
+
+    }
+
+    // CREAR
+
+    else{
+
+        const respuesta = await fetch("/api/alumnos", {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) {
+            mostrarAlumnoMensaje(resultado.error || "Error creando alumno", "error");
+            return;
+        }
+
+        console.log("Crear alumno resultado:", resultado);
+        const usuarioTemporal = resultado.usuario || datos.matricula || "Alumno";
+        const contrasenaTemporal = resultado.contrasenaTemporal || datos.matricula || "";
+
+        mostrarAlumnoMensaje(
+            `Alumno registrado correctamente. Copia la contraseña temporal antes de cerrar.`
+        );
+
+        mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "Este usuario deberá cambiarla en su primer acceso.");
+
+    }
+
+    cerrarModal();
+
+    cargarAlumnos();
+
+    e.target.reset();
+
+});
+
+// ELIMINAR
+
+async function eliminarAlumno(id){
+
+    if(!confirm("¿Eliminar alumno?"))
+    return;
+
+    await fetch(`/api/alumnos/${id}`, {
+
+        method:"DELETE"
+
+    });
+
+    cargarAlumnos();
+
+}
+
+// RESET CONTRASEÑA
+
+async function resetearContrasenaAlumno(id) {
+    if (!confirm("¿Restablecer contraseña temporal para este alumno?")) {
+        return;
+    }
+
+    const respuesta = await fetch(`/api/alumnos/${id}/reset-password`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok) {
+        mostrarAlumnoMensaje(resultado.error || "Error restableciendo contraseña", "error");
+        return;
+    }
+
+    console.log("Reset contraseña resultado:", resultado);
+    const usuarioTemporal = resultado.usuario || "Alumno";
+    const contrasenaTemporal = resultado.contrasenaTemporal || "";
+
+    mostrarAlumnoMensaje(
+        `Contraseña temporal restablecida. Copia el código y entrégalo al alumno.`
+    );
+
+    mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "El alumno deberá cambiar esta contraseña en su primer acceso.");
+}
+
+// MODAL
+
+function abrirModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "flex";
+
+}
+
+function cerrarModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "none";
+
+}
+function mostrarCredencialModal(usuario, contrasena, nota) {
+    usuario = usuario || "Alumno";
+    contrasena = contrasena || "No disponible";
+    document.getElementById("credencialUsuario").value = usuario;
+    document.getElementById("credencialPassword").value = contrasena;
+    document.getElementById("credencialModal").style.display = "flex";
+}
+
+function copiarCredencial() {
+    const passwordInput = document.getElementById("credencialPassword");
+    passwordInput.select();
+    passwordInput.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    alert("Contraseña temporal copiada al portapapeles");
+}
+
+function cerrarCredencialModal() {
+    document.getElementById("credencialModal").style.display = "none";
+}
+function editarAlumno(
+id,
+nombre,
+matricula,
+carrera,
+semestre,
+activo
+){
+
+    alumnoEditando = id;
+
+    abrirModal();
+
+    document.querySelector(
+    '[name="nombre"]'
+    ).value = nombre;
+
+    document.querySelector(
+    '[name="matricula"]'
+    ).value = matricula;
+
+    document.querySelector(
+    '[name="carrera"]'
+    ).value = carrera;
+
+    document.querySelector(
+    '[name="semestre"]'
+    ).value = semestre;
+
+    document.querySelector(
+    '[name="activo"]'
+    ).checked = activo;
+
+}
+// INICIAR
+
+cargarAlumnos();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Gestión de materias</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Administrador</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+
+<i class="fa-solid fa-house"></i>
+Inicio
+
+</a>
+
+<a href="/alumnos">
+
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+
+</a>
+
+<a href="/maestros">
+
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+
+</a>
+
+<a href="/materias" class="active">
+
+<i class="fa-solid fa-book"></i>
+Materias
+
+</a>
+
+<a href="/grupos">
+
+<i class="fa-solid fa-users"></i>
+Grupos
+
+</a>
+
+<a href="/personal">
+
+<i class="fa-solid fa-people-group"></i>
+Personal
+
+</a>
+
+<a href="/configuracion">
+
+<i class="fa-solid fa-gear"></i>
+Configuración
+
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<!-- CONTENIDO -->
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1>Gestión de materias</h1>
+
+<p>Administrar materias del sistema</p>
+
+</div>
+
+<button
+class="add-btn"
+onclick="abrirModal()">
+
+<i class="fa-solid fa-plus"></i>
+Agregar materia
+
+</button>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="tabla-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Nombre</th>
+<th>Clave</th>
+<th>Semestre</th>
+<th>Creditos</th>
+<th>Maestro</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaMaterias">
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<h2>Nueva materia</h2>
+
+<form id="formMateria">
+
+<input
+type="text"
+name="nombre"
+placeholder="Nombre"
+required>
+
+<input
+type="text"
+name="clave"
+placeholder="Clave"
+required>
+
+<input
+type="number"
+name="semestre"
+placeholder="Semestre"
+required>
+
+<input
+type="number"
+name="creditos"
+placeholder="Créditos"
+required>
+
+<input
+type="text"
+name="maestro"
+placeholder="Maestro"
+required>
+
+<label>
+
+<input
+type="checkbox"
+name="activa">
+
+Materia activa
+
+</label>
+
+<div class="modal-buttons">
+
+<button
+type="button"
+class="cancel-btn"
+onclick="cerrarModal()">
+
+Cancelar
+
+</button>
+
+<button
+type="submit"
+class="save-btn">
+
+Guardar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="permisos.js"></script>
+
+<script>
+
+let materiaEditando = null;
+
+function estadoBadge(activo, textoActivo = "Activa", textoInactivo = "Inactiva"){
+
+    const clase =
+    activo ? "active-status" : "inactive-status";
+
+    const texto =
+    activo ? textoActivo : textoInactivo;
+
+    return `
+    <span class="status-badge ${clase}">
+        <i class="fa-solid fa-circle"></i>
+        ${texto}
+    </span>`;
+
+}
+
+// CARGAR MATERIAS
+
+async function cargarMaterias(){
+
+    const res =
+    await fetch("/api/materias");
+
+    const materias =
+    await res.json();
+
+    const tabla =
+    document.getElementById("tablaMaterias");
+
+    tabla.innerHTML = "";
+
+    materias.forEach(materia => {
+
+        tabla.innerHTML += `
+
+        <tr>
+
+            <td>${materia.nombre}</td>
+
+            <td>${materia.clave}</td>
+
+            <td>${materia.semestre}</td>
+
+            <td>${materia.creditos}</td>
+
+            <td>${materia.maestro}</td>
+
+            <td>${estadoBadge(materia.activa)}</td>
+
+            <td>
+
+                <button
+class="edit-btn"
+onclick="editarMateria(
+'${materia._id}',
+'${materia.nombre}',
+'${materia.clave}',
+'${materia.semestre}',
+'${materia.creditos}',
+'${materia.maestro}',
+${materia.activa}
+)">
+
+Editar
+
+</button>
+
+<button
+class="delete-btn"
+onclick="eliminarMateria('${materia._id}')">
+
+Eliminar
+
+</button>
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+// AGREGAR MATERIA
+document.getElementById("formMateria")
+.addEventListener("submit",
+async e => {
+
+    e.preventDefault();
+
+    const form =
+    new FormData(e.target);
+
+    const datos =
+    Object.fromEntries(form);
+
+    // EDITAR
+
+    if(materiaEditando){
+
+        await fetch(
+
+        `/api/materias/${materiaEditando}`,
+
+        {
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+        materiaEditando = null;
+
+    }
+
+    // CREAR
+
+    else{
+
+        await fetch("/api/materias", {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+    }
+
+    cerrarModal();
+
+    cargarMaterias();
+
+    e.target.reset();
+
+});
+
+// ELIMINAR
+
+async function eliminarMateria(id){
+
+    if(!confirm("¿Eliminar materia?"))
+    return;
+
+    await fetch(`/api/materias/${id}`, {
+
+        method:"DELETE"
+
+    });
+
+    cargarMaterias();
+
+}
+
+// MODAL
+
+function abrirModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "flex";
+
+}
+
+function cerrarModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "none";
+
+}
+ 
+
+function editarMateria(
+id,
+nombre,
+clave,
+semestre,
+creditos,
+maestro,
+activo
+){
+
+    materiaEditando = id;
+
+    abrirModal();
+
+    document.querySelector(
+    '[name="nombre"]'
+    ).value = nombre;
+
+    document.querySelector(
+    '[name="clave"]'
+    ).value = clave;
+
+    document.querySelector(
+    '[name="semestre"]'
+    ).value = semestre;
+
+    document.querySelector(
+    '[name="creditos"]'
+    ).value = creditos;
+
+    document.querySelector(
+    '[name="maestro"]'
+    ).value = maestro;
+
+    document.querySelector(
+    '[name="activa"]'
+    ).checked = activo;
+
+}
+
+// INICIAR
+
+cargarMaterias();
+
+</script>
+
+</body>
+</html>

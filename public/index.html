@@ -1,25 +1,102 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
     <title>Sistema Escolar</title>
+
     <link rel="stylesheet" href="styles.css">
+
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 </head>
-<body>
 
-    <div class="contenedor">
-        <div class="card">
-            <h1>Sistema Escolar</h1>
-            <p>Seleccione el tipo de usuario</p>
+<body class="login-body">
 
-            <a href="admin.html">
-                <button class="btn admin">Administrador</button>
-            </a>
+    <div class="login-container">
 
-            <a href="alumno.html">
-                <button class="btn alumno">Alumno</button>
-            </a>
+        <!-- PANEL IZQUIERDO -->
+
+        <div class="login-left">
+
+            <div class="overlay"></div>
+
+            <div class="login-info">
+
+                <h1>
+                    Sistema Escolar
+                </h1>
+
+                <p>
+                    Plataforma de gestión académica
+                </p>
+
+            </div>
+
         </div>
+
+        <!-- LOGIN -->
+
+        <div class="login-right">
+
+            <form class="login-box"
+            action="/login"
+            method="POST">
+
+                <h2>Iniciar sesión</h2>
+
+                <p class="subtitle">
+                    Accede a tu cuenta
+                </p>
+
+                <!-- USUARIO -->
+
+                <div class="input-group">
+
+                    <i class="fa-solid fa-user"></i>
+
+                    <input
+                    type="text"
+                    name="usuario"
+                    placeholder="Usuario"
+                    required>
+
+                </div>
+
+                <!-- PASSWORD -->
+
+                <div class="input-group">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    <input
+                    type="password"
+                    name="password"
+                    placeholder="Contraseña"
+                    required>
+
+                </div>
+
+                <!-- BOTÓN -->
+
+                <button type="submit"
+                class="login-btn">
+
+                    Ingresar
+
+                </button>
+
+            </form>
+
+        </div>
+
     </div>
 
 </body>

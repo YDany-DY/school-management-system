@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscripciones Académicas</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div>
+            <div class="logo">
+                <h2>Sistema Escolar</h2>
+                <p>Inscripciones</p>
+            </div>
+            <nav>
+                <a href="/dashboard_personal">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+                <a href="/alumnos">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    Alumnos
+                </a>
+                <a href="/maestros">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    Maestros
+                </a>
+                <a href="/materias">
+                    <i class="fa-solid fa-book"></i>
+                    Materias
+                </a>
+                <a href="/grupos">
+                    <i class="fa-solid fa-users"></i>
+                    Grupos
+                </a>
+                <a href="/inscripciones" class="active">
+                    <i class="fa-solid fa-pencil"></i>
+                    Inscripciones
+                </a>
+            </nav>
+        </div>
+        <button class="logout-btn" onclick="window.location.href='/logout'">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Cerrar sesión
+        </button>
+    </aside>
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h1>Inscripciones académicas</h1>
+                <p>Administra las asignaciones de alumnos a materias y grupos.</p>
+            </div>
+            <div class="profile-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+        </div>
+
+        <section class="dashboard-section">
+            <div class="section-heading">
+                <h2>Nueva inscripción</h2>
+                <p>Selecciona alumno, materia y grupo para registrar la inscripción.</p>
+            </div>
+            <form id="inscripcionForm" class="form-card">
+                <div class="form-group">
+                    <label for="alumnoSelect">Alumno</label>
+                    <select id="alumnoSelect" required>
+                        <option value="">Selecciona un alumno</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="materiaSelect">Materia</label>
+                    <select id="materiaSelect" required>
+                        <option value="">Selecciona una materia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grupoSelect">Grupo</label>
+                    <select id="grupoSelect" required>
+                        <option value="">Selecciona un grupo</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Registrar inscripción</button>
+                <p id="inscripcionMensaje" class="form-feedback"></p>
+            </form>
+        </section>
+
+        <section class="tabla-container dashboard-panel">
+            <h2>Inscripciones recientes</h2>
+            <div id="listaInscripciones" class="activity-list">
+                <p class="empty-state">Cargando inscripciones...</p>
+            </div>
+        </section>
+    </main>
+</div>
+<script src="/js/inscripciones.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gestión de personal</title>
+
+<link rel="stylesheet" href="/styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+<h2>Sistema Escolar</h2>
+<p>Administrador</p>
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+<i class="fa-solid fa-house"></i>
+Inicio
+</a>
+
+<a href="/alumnos">
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+</a>
+
+<a href="/maestros">
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+</a>
+
+<a href="/materias">
+<i class="fa-solid fa-book"></i>
+Materias
+</a>
+
+<a href="/grupos">
+<i class="fa-solid fa-users"></i>
+Grupos
+</a>
+
+<a href="/personal" class="active">
+<i class="fa-solid fa-people-group"></i>
+Personal
+</a>
+
+<a href="/configuracion">
+<i class="fa-solid fa-gear"></i>
+Configuración
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+</button>
+
+</aside>
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+<h1>Gestión de personal</h1>
+<p>Administrar empleados, docentes y colaboradores</p>
+</div>
+
+<button class="add-btn" id="btnNuevoPersonal">
+<i class="fa-solid fa-user-plus"></i>
+Agregar personal
+</button>
+
+</div>
+
+<div class="settings-grid">
+
+<section class="settings-card settings-card-wide">
+
+<div class="settings-card-header settings-header-actions">
+
+<div class="settings-title-group">
+<i class="fa-solid fa-people-group"></i>
+<div>
+<h2>Personal institucional</h2>
+<p>Lista de personal autorizado del sistema</p>
+</div>
+</div>
+
+</div>
+
+<div class="settings-table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Nombre</th>
+<th>Correo</th>
+<th>Cargo</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="tablaPersonal">
+</tbody>
+
+</table>
+
+</div>
+
+<p class="form-message" id="mensajePersonal"></p>
+
+</section>
+
+<section class="settings-card settings-card-wide">
+
+<div class="settings-card-header">
+<i class="fa-solid fa-id-badge"></i>
+<div>
+<h2>Cargos disponibles</h2>
+<p>Funciones básicas del personal dentro del sistema</p>
+</div>
+</div>
+
+<div class="roles-list roles-list-wide">
+
+<div class="role-item">
+<strong>Administrador</strong>
+<span>Acceso total, configuración general y gestión completa</span>
+</div>
+
+<div class="role-item">
+<strong>Coordinador</strong>
+<span>Supervisión académica, organización y seguimiento</span>
+</div>
+
+<div class="role-item">
+<strong>Instructor</strong>
+<span>Gestión de grupos, cursos o alumnos</span>
+</div>
+
+<div class="role-item">
+<strong>Auxiliar</strong>
+<span>Apoyo operativo y administrativo</span>
+</div>
+
+<div class="role-item">
+<strong>Capturista</strong>
+<span>Captura y actualización de información</span>
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+<div class="modal" id="modalPersonal">
+
+<div class="modal-content settings-modal">
+
+<h2 id="tituloModalPersonal">Nuevo personal</h2>
+
+<form id="formPersonal">
+
+<input type="hidden" name="id">
+
+<input type="text" name="nombre" placeholder="Nombre completo" required>
+
+<input type="email" name="correo" placeholder="Correo institucional" required>
+
+<input type="password" name="password" placeholder="Contraseña">
+
+<select name="cargo" required>
+<option value="administrador">Administrador</option>
+<option value="coordinador">Coordinador</option>
+<option value="instructor">Instructor</option>
+<option value="auxiliar">Auxiliar</option>
+<option value="capturista">Capturista</option>
+</select>
+
+<label>
+<input type="checkbox" name="activo" checked>
+Personal activo
+</label>
+
+<div class="modal-buttons">
+
+<button type="button" class="cancel-btn" id="btnCancelarPersonal">
+Cancelar
+</button>
+
+<button type="submit" class="save-btn">
+Guardar
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="/personal.js"></script>
+
+</body>
+</html>

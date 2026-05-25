@@ -2,29 +2,273 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Administrador</title>
+    <title>Dashboard Administrador</title>
+
     <link rel="stylesheet" href="styles.css">
+
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
 
-<div class="dashboard">
+<div class="dashboard-container">
 
-    <div class="sidebar">
-        <h2>Administrador</h2>
-        <a href="#">Inicio</a>
-        <a href="#">Maestros</a>
-        <a href="#">Alumnos</a>
-        <a href="#">Cursos</a>
-        <a href="#">Pagos</a>
-        <a href="index.html">Cerrar sesión</a>
-    </div>
+    <!-- SIDEBAR -->
 
-    <div class="contenido">
-        <h1>Administrador</h1>
-        <p></p>
-    </div>
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                <h2>Sistema Escolar</h2>
+                <p>Panel Administrador</p>
+            </div>
+
+            <nav>
+
+                <a href="/dashboard_admin" class="active">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+
+                <a href="/alumnos">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    Alumnos
+                </a>
+
+                <a href="/maestros">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    Maestros
+                </a>
+
+                <a href="/materias">
+                    <i class="fa-solid fa-book"></i>
+                    Materias
+                </a>
+
+                <a href="/grupos">
+                    <i class="fa-solid fa-users"></i>
+                    Grupos
+                </a>
+
+                <a href="/inscripciones">
+                    <i class="fa-solid fa-pencil"></i>
+                    Inscripciones
+                </a>
+
+                <a href="/personal">
+                    <i class="fa-solid fa-people-group"></i>
+                    Personal
+                </a>
+
+                <a href="/configuracion">
+                    <i class="fa-solid fa-gear"></i>
+                    Configuración
+                </a>
+
+            </nav>
+
+        </div>
+
+        <button class="logout-btn"
+        onclick="window.location.href='/logout'">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Cerrar sesión
+
+        </button>
+
+    </aside>
+
+    <!-- CONTENIDO -->
+
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div>
+
+                <h1 id="bienvenida">
+                    Bienvenido
+                </h1>
+
+                <p>
+                    Administrador del sistema escolar
+                </p>
+
+            </div>
+
+            <div class="profile-icon">
+
+                <i class="fa-solid fa-user-shield"></i>
+
+            </div>
+
+        </div>
+
+        <!-- CARDS -->
+
+        <div class="cards-grid dashboard-cards">
+
+            <a class="card dashboard-card-link" href="/alumnos">
+
+                <i class="fa-solid fa-user-graduate"></i>
+
+                <h2 id="totalAlumnos">0</h2>
+
+                <p>Alumnos</p>
+
+                <span id="detalleAlumnos">0 nuevos esta semana</span>
+
+            </a>
+
+            <a class="card dashboard-card-link" href="/personal">
+
+                <i class="fa-solid fa-people-group"></i>
+
+                <h2 id="totalPersonal">0</h2>
+
+                <p>Personal</p>
+
+                <span id="detallePersonal">0 activos</span>
+
+            </a>
+
+            <a class="card dashboard-card-link" href="/materias">
+
+                <i class="fa-solid fa-book"></i>
+
+                <h2 id="totalMaterias">0</h2>
+
+                <p>Materias</p>
+
+                <span id="detalleMaterias">0 disponibles</span>
+
+            </a>
+
+            <a class="card dashboard-card-link" href="/grupos">
+
+                <i class="fa-solid fa-users"></i>
+
+                <h2 id="totalGrupos">0</h2>
+
+                <p>Grupos</p>
+
+                <span id="detalleGrupos">0 activos</span>
+
+            </a>
+
+        </div>
+
+        <!-- ACCESOS RAPIDOS -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+                <h2>Accesos rápidos</h2>
+                <p>Acciones frecuentes del administrador</p>
+            </div>
+
+            <div class="quick-actions">
+
+                <a href="/alumnos" class="quick-action">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Nuevo alumno
+                </a>
+
+                <a href="/grupos" class="quick-action">
+                    <i class="fa-solid fa-users"></i>
+                    Nuevo grupo
+                </a>
+
+                <a href="/materias" class="quick-action">
+                    <i class="fa-solid fa-book-open"></i>
+                    Nueva materia
+                </a>
+
+                <a href="/inscripciones" class="quick-action">
+                    <i class="fa-solid fa-pencil"></i>
+                    Nueva inscripción
+                </a>
+
+                <a href="/personal" class="quick-action">
+                    <i class="fa-solid fa-id-badge"></i>
+                    Agregar personal
+                </a>
+
+            </div>
+
+        </section>
+
+        <div class="dashboard-grid">
+
+        <!-- ACTIVIDAD -->
+
+        <section class="tabla-container dashboard-panel">
+
+            <h2>
+                Actividad reciente
+            </h2>
+
+            <div class="activity-list" id="listaActividades">
+                <p class="empty-state">Cargando actividades...</p>
+            </div>
+
+        </section>
+
+        <!-- ESTADO DEL SISTEMA -->
+
+        <section class="tabla-container dashboard-panel">
+
+            <h2>Estado del sistema</h2>
+
+            <div class="system-status">
+
+                <div class="status-item">
+                    <span>MongoDB</span>
+                    <strong id="estadoMongo">Verificando...</strong>
+                </div>
+
+                <div class="status-item">
+                    <span>Sesión</span>
+                    <strong id="estadoSesion">Activa</strong>
+                </div>
+
+                <div class="status-item">
+                    <span>Fecha y hora</span>
+                    <strong id="estadoFecha">--</strong>
+                </div>
+
+                <div class="status-item">
+                    <span>Tipo de sistema</span>
+                    <strong id="estadoTipo">Escolar</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ALERTAS -->
+
+        <section class="tabla-container dashboard-panel dashboard-alerts">
+
+            <h2>Alertas del sistema</h2>
+
+            <div class="alerts-list" id="listaAlertas">
+                <p class="empty-state">Sin alertas por ahora</p>
+            </div>
+
+        </section>
+
+        </div>
+
+    </main>
 
 </div>
+
+<script src="/js/dashboard.js"></script>
 
 </body>
 </html>

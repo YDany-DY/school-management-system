@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Configuración</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Administrador</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+<i class="fa-solid fa-house"></i>
+Inicio
+</a>
+
+<a href="/alumnos">
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+</a>
+
+<a href="/maestros">
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+</a>
+
+<a href="/materias">
+<i class="fa-solid fa-book"></i>
+Materias
+</a>
+
+<a href="/grupos">
+<i class="fa-solid fa-users"></i>
+Grupos
+</a>
+
+<a href="/personal">
+<i class="fa-solid fa-people-group"></i>
+Personal
+</a>
+
+<a href="/configuracion" class="active">
+<i class="fa-solid fa-gear"></i>
+Configuración
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1>Configuración</h1>
+
+<p>Personalización, personal y seguridad del sistema</p>
+
+</div>
+
+<div class="profile-icon">
+
+<i class="fa-solid fa-sliders"></i>
+
+</div>
+
+</div>
+
+<div class="settings-grid">
+
+<!-- PERSONALIZACION -->
+
+<section class="settings-card settings-card-wide">
+
+<div class="settings-card-header">
+
+<i class="fa-solid fa-wand-magic-sparkles"></i>
+
+<div>
+
+<h2>Personalización del sistema</h2>
+
+<p>Adapta la plataforma para escuelas, cursos o capacitación</p>
+
+</div>
+
+</div>
+
+<form id="formPersonalizacion" class="settings-form">
+
+<div class="form-row">
+
+<label>
+Nombre del sistema
+<input type="text" name="nombreSistema" placeholder="Ej. Sistema Escolar">
+</label>
+
+<label>
+Nombre de institución
+<input type="text" name="nombreInstitucion" placeholder="Ej. Centro de Capacitación">
+</label>
+
+</div>
+
+<label>
+Texto de bienvenida/login
+<input type="text" name="textoBienvenida" placeholder="Ej. Bienvenido a tu plataforma académica">
+</label>
+
+<div class="form-row">
+
+<label>
+Correo institucional
+<input type="email" name="correoInstitucional" placeholder="contacto@institucion.edu.mx">
+</label>
+
+<label>
+Teléfono
+<input type="text" name="telefono" placeholder="Ej. 747 123 4567">
+</label>
+
+</div>
+
+<div class="form-row">
+
+<label>
+Tipo de sistema
+<select name="tipoSistema">
+<option value="Escolar">Escolar</option>
+<option value="Cursos">Cursos</option>
+<option value="Capacitación">Capacitación</option>
+</select>
+</label>
+
+<label>
+Color principal
+<input type="color" name="colorPrincipal" value="#2563eb">
+</label>
+
+</div>
+
+<label>
+Logo del sistema
+<input type="text" name="logoSistema" placeholder="URL del logo o texto identificador">
+</label>
+
+<button type="submit" class="save-btn settings-action">
+<i class="fa-solid fa-floppy-disk"></i>
+Guardar cambios
+</button>
+
+<p class="form-message" id="mensajePersonalizacion"></p>
+
+</form>
+
+</section>
+
+<!-- PERSONAL -->
+
+<section class="settings-card settings-card-wide">
+
+<div class="settings-card-header settings-header-actions">
+
+<div class="settings-title-group">
+
+<i class="fa-solid fa-people-group"></i>
+
+<div>
+
+<h2>Gestión de personal</h2>
+
+<p>Crear, editar, eliminar y activar personal autorizado</p>
+
+</div>
+
+</div>
+
+<button class="add-btn settings-action" id="btnNuevoUsuario">
+<i class="fa-solid fa-user-plus"></i>
+Nuevo personal
+</button>
+
+</div>
+
+<div class="settings-table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Nombre</th>
+<th>Correo</th>
+<th>Cargo</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+
+</thead>
+
+<tbody id="tablaUsuarios">
+</tbody>
+
+</table>
+
+</div>
+
+<p class="form-message" id="mensajeUsuarios"></p>
+
+</section>
+
+<!-- ROLES -->
+
+<section class="settings-card">
+
+<div class="settings-card-header">
+
+<i class="fa-solid fa-id-badge"></i>
+
+<div>
+
+<h2>Cargos básicos</h2>
+
+<p>Cargos predefinidos para explicar el módulo Personal</p>
+
+</div>
+
+</div>
+
+<div class="roles-list">
+
+<div class="role-item">
+<strong>Administrador</strong>
+<span>Acceso total</span>
+</div>
+
+<div class="role-item">
+<strong>Coordinador</strong>
+<span>Supervisión académica, organización y seguimiento</span>
+</div>
+
+<div class="role-item">
+<strong>Instructor</strong>
+<span>Gestión de grupos, cursos o alumnos</span>
+</div>
+
+<div class="role-item">
+<strong>Auxiliar</strong>
+<span>Apoyo operativo y administrativo</span>
+</div>
+
+<div class="role-item">
+<strong>Capturista</strong>
+<span>Captura y actualización de información</span>
+</div>
+
+</div>
+
+</section>
+
+<!-- SEGURIDAD -->
+
+<section class="settings-card">
+
+<div class="settings-card-header">
+
+<i class="fa-solid fa-lock"></i>
+
+<div>
+
+<h2>Seguridad</h2>
+
+<p>Cambiar contraseña del administrador</p>
+
+</div>
+
+</div>
+
+<form id="formPassword" class="settings-form">
+
+<label>
+Contraseña actual
+<input type="password" name="passwordActual" required>
+</label>
+
+<label>
+Nueva contraseña
+<input type="password" name="nuevaPassword" required>
+</label>
+
+<label>
+Confirmar contraseña
+<input type="password" name="confirmarPassword" required>
+</label>
+
+<button type="submit" class="save-btn settings-action">
+<i class="fa-solid fa-key"></i>
+Actualizar contraseña
+</button>
+
+<p class="form-message" id="mensajePassword"></p>
+
+</form>
+
+</section>
+
+<!-- SISTEMA -->
+
+<section class="settings-card">
+
+<div class="settings-card-header">
+
+<i class="fa-solid fa-server"></i>
+
+<div>
+
+<h2>Sistema</h2>
+
+<p>Acciones rápidas de administración</p>
+
+</div>
+
+</div>
+
+<div class="settings-actions-panel">
+
+<button id="btnRespaldo" class="save-btn settings-action">
+<i class="fa-solid fa-database"></i>
+Generar respaldo
+</button>
+
+<button class="logout-btn settings-action"
+onclick="window.location.href='/logout'">
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+</button>
+
+</div>
+
+<p class="form-message" id="mensajeRespaldo"></p>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL USUARIO -->
+
+<div class="modal" id="modalUsuario">
+
+<div class="modal-content settings-modal">
+
+<h2 id="tituloModalUsuario">Nuevo personal</h2>
+
+<form id="formUsuario">
+
+<input type="hidden" name="id">
+
+<input type="text" name="nombre" placeholder="Nombre completo" required>
+
+<input type="email" name="correo" placeholder="Correo" required>
+
+<input type="password" name="password" placeholder="Contraseña">
+
+<select name="cargo" required>
+<option value="administrador">Administrador</option>
+<option value="coordinador">Coordinador</option>
+<option value="instructor">Instructor</option>
+<option value="auxiliar">Auxiliar</option>
+<option value="capturista">Capturista</option>
+</select>
+
+<label>
+<input type="checkbox" name="activo" checked>
+Personal activo
+</label>
+
+<div class="modal-buttons">
+
+<button type="button" class="cancel-btn" id="btnCancelarUsuario">
+Cancelar
+</button>
+
+<button type="submit" class="save-btn">
+Guardar
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="configuracion.js"></script>
+
+</body>
+</html>

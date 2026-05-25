@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Gestión de grupos</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Administrador</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+
+<i class="fa-solid fa-house"></i>
+Inicio
+
+</a>
+
+<a href="/alumnos">
+
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+
+</a>
+
+<a href="/maestros">
+
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+
+</a>
+
+<a href="/materias">
+
+<i class="fa-solid fa-book"></i>
+Materias
+
+</a>
+
+<a href="/grupos" class="active">
+
+<i class="fa-solid fa-users"></i>
+Grupos
+
+</a>
+
+<a href="/personal">
+
+<i class="fa-solid fa-people-group"></i>
+Personal
+
+</a>
+
+<a href="/configuracion">
+
+<i class="fa-solid fa-gear"></i>
+Configuración
+
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<!-- CONTENIDO -->
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1>Gestión de grupos</h1>
+
+<p>Administrar grupos del sistema</p>
+
+</div>
+
+<button
+class="add-btn"
+onclick="abrirModal()">
+
+<i class="fa-solid fa-plus"></i>
+Agregar grupo
+
+</button>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="tabla-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Nombre</th>
+<th>Semestre</th>
+<th>Carrera</th>
+<th>Tutor</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaGrupos">
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<h2>Nuevo grupo</h2>
+
+<form id="formGrupo">
+
+<input
+type="text"
+name="nombre"
+placeholder="Nombre"
+required>
+
+<input
+type="number"
+name="semestre"
+placeholder="Semestre"
+required>
+
+<input
+type="text"
+name="carrera"
+placeholder="Carrera"
+required>
+
+<input
+type="text"
+name="tutor"
+placeholder="Tutor"
+required>
+
+<label>
+
+<input
+type="checkbox"
+name="activo">
+
+Grupo activo
+
+</label>
+
+<div class="modal-buttons">
+
+<button
+type="button"
+class="cancel-btn"
+onclick="cerrarModal()">
+
+Cancelar
+
+</button>
+
+<button
+type="submit"
+class="save-btn">
+
+Guardar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="permisos.js"></script>
+
+<script>
+
+let grupoEditando = null;
+
+function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
+
+    const clase =
+    activo ? "active-status" : "inactive-status";
+
+    const texto =
+    activo ? textoActivo : textoInactivo;
+
+    return `
+    <span class="status-badge ${clase}">
+        <i class="fa-solid fa-circle"></i>
+        ${texto}
+    </span>`;
+
+}
+
+// CARGAR GRUPOS
+
+async function cargarGrupos(){
+
+    const res =
+    await fetch("/api/grupos");
+
+    const grupos =
+    await res.json();
+
+    const tabla =
+    document.getElementById("tablaGrupos");
+
+    tabla.innerHTML = "";
+
+    grupos.forEach(grupo => {
+
+        tabla.innerHTML += `
+
+        <tr>
+
+            <td>${grupo.nombre}</td>
+
+            <td>${grupo.semestre}</td>
+
+            <td>${grupo.carrera}</td>
+
+            <td>${grupo.tutor}</td>
+
+            <td>${estadoBadge(grupo.activo)}</td>
+
+            <td>
+
+                <button
+class="edit-btn"
+onclick="editarGrupo(
+'${grupo._id}',
+'${grupo.nombre}',
+'${grupo.semestre}',
+'${grupo.carrera}',
+'${grupo.tutor}',
+${grupo.activo}
+)">
+
+Editar
+
+</button>
+
+<button
+class="delete-btn"
+onclick="eliminarGrupo('${grupo._id}')">
+
+Eliminar
+
+</button>
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+// AGREGAR GRUPO
+document.getElementById("formGrupo")
+.addEventListener("submit",
+async e => {
+
+    e.preventDefault();
+
+    const form =
+    new FormData(e.target);
+
+    const datos =
+    Object.fromEntries(form);
+
+    datos.activo =
+    form.get("activo") === "on";
+
+    // EDITAR
+
+    if(grupoEditando){
+
+        await fetch(
+
+        `/api/grupos/${grupoEditando}`,
+
+        {
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+        grupoEditando = null;
+
+    }
+
+    // CREAR
+
+    else{
+
+        await fetch("/api/grupos", {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+    }
+
+    cerrarModal();
+
+    cargarGrupos();
+
+    e.target.reset();
+
+});
+
+// ELIMINAR
+
+async function eliminarGrupo(id){
+
+    if(!confirm("¿Eliminar grupo?"))
+    return;
+
+    await fetch(`/api/grupos/${id}`, {
+
+        method:"DELETE"
+
+    });
+
+    cargarGrupos();
+
+}
+
+// MODAL
+
+function abrirModal(){
+
+    grupoEditando = null;
+
+    document
+    .getElementById("formGrupo")
+    .reset();
+
+    document
+    .getElementById("modal")
+    .style.display = "flex";
+
+}
+
+function cerrarModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "none";
+
+}
+ 
+
+function editarGrupo(
+id,
+nombre,
+semestre,
+carrera,
+tutor,
+activo
+){
+
+    grupoEditando = id;
+
+    document
+    .getElementById("modal")
+    .style.display = "flex";
+
+    document.querySelector(
+    '[name="nombre"]'
+    ).value = nombre;
+
+    document.querySelector(
+    '[name="semestre"]'
+    ).value = semestre;
+
+    document.querySelector(
+    '[name="carrera"]'
+    ).value = carrera;
+
+    document.querySelector(
+    '[name="tutor"]'
+    ).value = tutor;
+
+    document.querySelector(
+    '[name="activo"]'
+    ).checked = activo;
+
+}
+
+// INICIAR
+
+cargarGrupos();
+
+</script>
+
+</body>
+</html>

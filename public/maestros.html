@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Gestión de maestros</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<h2>Sistema Escolar</h2>
+
+<p>Administrador</p>
+
+</div>
+
+<nav>
+
+<a href="/dashboard_admin">
+
+<i class="fa-solid fa-house"></i>
+Inicio
+
+</a>
+
+<a href="/alumnos">
+
+<i class="fa-solid fa-user-graduate"></i>
+Alumnos
+
+</a>
+
+<a href="/maestros" class="active">
+
+<i class="fa-solid fa-chalkboard-user"></i>
+Maestros
+
+</a>
+
+<a href="/materias">
+
+<i class="fa-solid fa-book"></i>
+Materias
+
+</a>
+
+<a href="/grupos">
+
+<i class="fa-solid fa-users"></i>
+Grupos
+
+</a>
+
+<a href="/personal">
+
+<i class="fa-solid fa-people-group"></i>
+Personal
+
+</a>
+
+<a href="/configuracion">
+
+<i class="fa-solid fa-gear"></i>
+Configuración
+
+</a>
+
+</nav>
+
+</div>
+
+<button class="logout-btn"
+onclick="window.location.href='/logout'">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+Cerrar sesión
+
+</button>
+
+</aside>
+
+<!-- CONTENIDO -->
+
+<main class="main-content">
+
+<div class="topbar">
+
+<div>
+
+<h1>Gestión de maestros</h1>
+
+<p>Administrar maestros del sistema</p>
+
+</div>
+
+<button
+class="add-btn"
+onclick="abrirModal()">
+
+<i class="fa-solid fa-plus"></i>
+Agregar maestro
+
+</button>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="tabla-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Nombre</th>
+<th>Correo</th>
+<th>Especialidad</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaMaestros">
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<h2>Nuevo maestro</h2>
+
+<form id="formMaestro">
+
+<input
+type="text"
+name="nombre"
+placeholder="Nombre"
+required>
+
+<input
+type="email"
+name="correo"
+placeholder="correo"
+required>
+
+<input
+type="text"
+name="especialidad"
+placeholder="Especialidad"
+required>
+
+
+<div class="modal-buttons">
+
+<button
+type="button"
+class="cancel-btn"
+onclick="cerrarModal()">
+
+Cancelar
+
+</button>
+
+<button
+type="submit"
+class="save-btn">
+
+Guardar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="permisos.js"></script>
+
+<script>
+
+let maestroEditando = null;
+
+function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
+
+    const clase =
+    activo ? "active-status" : "inactive-status";
+
+    const texto =
+    activo ? textoActivo : textoInactivo;
+
+    return `
+    <span class="status-badge ${clase}">
+        <i class="fa-solid fa-circle"></i>
+        ${texto}
+    </span>`;
+
+}
+
+// CARGAR MAESTROS
+
+async function cargarMaestros(){
+
+    const res =
+    await fetch("/api/maestros");
+
+    const maestros =
+    await res.json();
+
+    const tabla =
+    document.getElementById("tablaMaestros");
+
+    tabla.innerHTML = "";
+
+    maestros.forEach(maestro => {
+
+        tabla.innerHTML += `
+
+        <tr>
+
+            <td>${maestro.nombre}</td>
+
+            <td>${maestro.correo}</td>
+
+            <td>${maestro.especialidad}</td>
+
+            <td>${estadoBadge(maestro.activo !== false)}</td>
+        
+
+            <td>
+
+                <button
+class="edit-btn"
+onclick="editarMaestro(
+'${maestro._id}',
+'${maestro.nombre}',
+'${maestro.correo}',
+'${maestro.especialidad}'
+)">
+
+Editar
+
+</button>
+
+<button
+class="delete-btn"
+onclick="eliminarMaestro('${maestro._id}')">
+
+Eliminar
+
+</button>
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+// AGREGAR MAESTRO
+document.getElementById("formMaestro")
+.addEventListener("submit",
+async e => {
+
+    e.preventDefault();
+
+    const form =
+    new FormData(e.target);
+
+    const datos =
+    Object.fromEntries(form);
+
+    // EDITAR
+
+    if(maestroEditando){
+
+        await fetch(
+
+        `/api/maestros/${maestroEditando}`,
+
+        {
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+        maestroEditando = null;
+
+    }
+
+    // CREAR
+
+    else{
+
+        await fetch("/api/maestros", {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(datos)
+
+        });
+
+    }
+
+    cerrarModal();
+
+    cargarMaestros();
+
+    e.target.reset();
+
+});
+
+// ELIMINAR
+
+async function eliminarMaestro(id){
+
+    if(!confirm("¿Eliminar maestro?"))
+    return;
+
+    await fetch(`/api/maestros/${id}`, {
+
+        method:"DELETE"
+
+    });
+
+    cargarMaestros();
+
+}
+
+// MODAL
+
+function abrirModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "flex";
+
+}
+
+function cerrarModal(){
+
+    document
+    .getElementById("modal")
+    .style.display = "none";
+
+}
+ 
+
+function editarMaestro(
+id,
+nombre,
+correo,
+especialidad
+){
+
+    maestroEditando = id;
+
+    abrirModal();
+
+    document.querySelector(
+    '[name="nombre"]'
+    ).value = nombre;
+
+    document.querySelector(
+    '[name="correo"]'
+    ).value = correo;
+
+    document.querySelector(
+    '[name="especialidad"]'
+    ).value = especialidad;
+
+}
+
+// INICIAR
+
+cargarMaestros();
+
+</script>
+
+</body>
+</html>
