@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis materias</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div>
+            <div class="logo">
+                <h2>Sistema Escolar</h2>
+                <p>Profesor</p>
+            </div>
+            <nav>
+                <a href="/dashboard_maestro">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+                <a href="/mis-grupos">
+                    <i class="fa-solid fa-users"></i>
+                    Mis grupos
+                </a>
+                <a href="/mis-materias" class="active">
+                    <i class="fa-solid fa-book"></i>
+                    Mis materias
+                </a>
+                <a href="/evaluacion#calificaciones">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Calificaciones
+                </a>
+                <a href="/evaluacion#asistencias">
+                    <i class="fa-solid fa-user-check"></i>
+                    Asistencias
+                </a>
+                <a href="/evaluacion">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    Evaluación
+                </a>
+            </nav>
+        </div>
+        <button class="logout-btn" onclick="window.location.href='/logout'">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Cerrar sesión
+        </button>
+    </aside>
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h1>Mis materias</h1>
+                <p>Solo ves las materias que te han sido asignadas.</p>
+            </div>
+            <div class="profile-icon">
+                <i class="fa-solid fa-book"></i>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <table class="full-width-table">
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th>Clave</th>
+                        <th>Semestre</th>
+                        <th>Créditos</th>
+                        <th>Grupos</th>
+                        <th>Alumnos</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaMaterias"></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="/permisos.js"></script>
+<script src="/js/mis_materias.js"></script>
+</body>
+</html>

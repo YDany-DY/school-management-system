@@ -70,6 +70,20 @@ Grupos
 
 </a>
 
+<a href="/inscripciones">
+
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+
+</a>
+
+<a href="/evaluacion">
+
+<i class="fa-solid fa-clipboard-check"></i>
+Evaluación
+
+</a>
+
 <a href="/personal">
 
 <i class="fa-solid fa-people-group"></i>
@@ -122,6 +136,8 @@ Agregar materia
 </button>
 
 </div>
+
+<div id="materiaMensaje" class="form-feedback"></div>
 
 <!-- TABLA -->
 
@@ -201,7 +217,8 @@ required>
 
 <input
 type="checkbox"
-name="activa">
+name="activa"
+checked>
 
 Materia activa
 
@@ -254,6 +271,12 @@ function estadoBadge(activo, textoActivo = "Activa", textoInactivo = "Inactiva")
         ${texto}
     </span>`;
 
+}
+
+function mostrarMateriaMensaje(texto, tipo = "success"){
+    const mensaje = document.getElementById("materiaMensaje");
+    mensaje.innerText = texto;
+    mensaje.className = `form-feedback ${tipo}`;
 }
 
 // CARGAR MATERIAS
@@ -337,11 +360,14 @@ async e => {
     const datos =
     Object.fromEntries(form);
 
+    datos.activa =
+    form.get("activa") === "on";
+
     // EDITAR
 
     if(materiaEditando){
 
-        await fetch(
+        const respuesta = await fetch(
 
         `/api/materias/${materiaEditando}`,
 
@@ -357,6 +383,15 @@ async e => {
 
         });
 
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            mostrarMateriaMensaje(resultado.error || "Error actualizando materia", "error");
+            return;
+        }
+
+        mostrarMateriaMensaje(resultado.mensaje || "Materia actualizada");
+
         materiaEditando = null;
 
     }
@@ -365,7 +400,7 @@ async e => {
 
     else{
 
-        await fetch("/api/materias", {
+        const respuesta = await fetch("/api/materias", {
 
             method:"POST",
 
@@ -376,6 +411,15 @@ async e => {
             body:JSON.stringify(datos)
 
         });
+
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            mostrarMateriaMensaje(resultado.error || "Error creando materia", "error");
+            return;
+        }
+
+        mostrarMateriaMensaje(resultado.mensaje || "Materia creada");
 
     }
 
@@ -394,11 +438,20 @@ async function eliminarMateria(id){
     if(!confirm("¿Eliminar materia?"))
     return;
 
-    await fetch(`/api/materias/${id}`, {
+    const respuesta = await fetch(`/api/materias/${id}`, {
 
         method:"DELETE"
 
     });
+
+    const resultado = await respuesta.json();
+
+    if(!respuesta.ok){
+        mostrarMateriaMensaje(resultado.error || "Error eliminando materia", "error");
+        return;
+    }
+
+    mostrarMateriaMensaje(resultado.mensaje || "Materia eliminada");
 
     cargarMaterias();
 
@@ -406,7 +459,19 @@ async function eliminarMateria(id){
 
 // MODAL
 
-function abrirModal(){
+function abrirModal(nuevo = true){
+
+    if(nuevo){
+        materiaEditando = null;
+
+        document
+        .getElementById("formMateria")
+        .reset();
+
+        document.querySelector(
+        '[name="activa"]'
+        ).checked = true;
+    }
 
     document
     .getElementById("modal")
@@ -435,7 +500,7 @@ activo
 
     materiaEditando = id;
 
-    abrirModal();
+    abrirModal(false);
 
     document.querySelector(
     '[name="nombre"]'

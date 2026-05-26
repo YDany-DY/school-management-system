@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { verificarSesion, verificarRol } = require("../middleware/verificarRol");
+const { registrarActividad } = require("./actividades");
 
 require("../models/Inscripcion");
 
@@ -120,6 +121,14 @@ router.post("/api/inscripciones", verificarSesion, verificarRol("admin", "person
             .populate("alumnoId", "nombre matricula carrera semestre")
             .populate("materiaId", "nombre clave semestre creditos")
             .populate("grupoId", "nombre semestre carrera tutor activo");
+
+        await registrarActividad({
+            usuario: req.session.usuario.usuario,
+            rol: req.session.usuario.rol,
+            accion: "crear",
+            modulo: "Inscripciones",
+            descripcion: `Inscripción registrada: ${alumno.nombre} en ${materia.nombre}`
+        });
 
         res.status(201).json(inscripcionGuardada);
     } catch (error) {

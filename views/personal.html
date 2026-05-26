@@ -56,6 +56,16 @@ Materias
 Grupos
 </a>
 
+<a href="/inscripciones">
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+</a>
+
+<a href="/evaluacion">
+<i class="fa-solid fa-clipboard-check"></i>
+Evaluación
+</a>
+
 <a href="/personal" class="active">
 <i class="fa-solid fa-people-group"></i>
 Personal
@@ -158,13 +168,13 @@ Agregar personal
 </div>
 
 <div class="role-item">
-<strong>Instructor</strong>
-<span>Gestión de grupos, cursos o alumnos</span>
+<strong>Profesor</strong>
+<span>Gestión académica de grupos, materias y alumnos</span>
 </div>
 
 <div class="role-item">
 <strong>Auxiliar</strong>
-<span>Apoyo operativo y administrativo</span>
+<span>Apoyo operativo del sistema</span>
 </div>
 
 <div class="role-item">
@@ -196,22 +206,23 @@ Agregar personal
 
 <input type="email" name="correo" placeholder="Correo institucional" required>
 
-<input type="password" name="password" placeholder="Contraseña">
+                <input type="text" name="usuario" placeholder="Usuario generado" readonly hidden>
 
-<select name="cargo" required>
+                <input type="password" name="password" placeholder="Contraseña temporal (opcional)">
+
+                <select name="cargo" required>
 <option value="administrador">Administrador</option>
 <option value="coordinador">Coordinador</option>
-<option value="instructor">Instructor</option>
+<option value="profesor">Profesor</option>
 <option value="auxiliar">Auxiliar</option>
 <option value="capturista">Capturista</option>
 </select>
 
-<label>
-<input type="checkbox" name="activo" checked>
-Personal activo
-</label>
-
-<div class="modal-buttons">
+                <select name="estado" required>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="suspendido">Suspendido</option>
+                </select>
 
 <button type="button" class="cancel-btn" id="btnCancelarPersonal">
 Cancelar

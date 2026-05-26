@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed-demo.js"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "express": "^5.2.1",

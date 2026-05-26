@@ -70,6 +70,20 @@ Grupos
 
 </a>
 
+<a href="/inscripciones">
+
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+
+</a>
+
+<a href="/evaluacion">
+
+<i class="fa-solid fa-clipboard-check"></i>
+Evaluación
+
+</a>
+
 <a href="/personal">
 
 <i class="fa-solid fa-people-group"></i>
@@ -137,6 +151,8 @@ Agregar alumno
 
 <th>Nombre</th>
 <th>Matrícula</th>
+<th>Correo</th>
+<th>Grupo</th>
 <th>Carrera</th>
 <th>Semestre</th>
 <th>Estado</th>
@@ -181,6 +197,17 @@ placeholder="Matrícula"
 required>
 
 <input
+type="email"
+name="correo"
+placeholder="Correo">
+
+<select
+name="grupoId"
+id="grupoAlumnoSelect">
+<option value="">Sin grupo asignado</option>
+</select>
+
+<input
 type="text"
 name="carrera"
 placeholder="Carrera"
@@ -192,16 +219,11 @@ name="semestre"
 placeholder="Semestre"
 required>
 
-<label>
-
-<input
-type="checkbox"
-name="activo"
-checked>
-
-Alumno activo
-
-</label>
+<select name="estado" required>
+    <option value="activo">Activo</option>
+    <option value="inactivo">Inactivo</option>
+    <option value="suspendido">Suspendido</option>
+</select>
 
 <div class="modal-buttons">
 
@@ -263,6 +285,7 @@ Cerrar
 <script>
 
 let alumnoEditando = null;
+let gruposAlumno = [];
 
 function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
 
@@ -277,6 +300,51 @@ function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo")
         <i class="fa-solid fa-circle"></i>
         ${texto}
     </span>`;
+
+}
+
+async function cargarOpcionesAlumno(){
+
+    const res =
+    await fetch("/api/alumnos/opciones");
+
+    const data =
+    await res.json();
+
+    gruposAlumno =
+    data.grupos || [];
+
+    const select =
+    document.getElementById("grupoAlumnoSelect");
+
+    select.innerHTML =
+    '<option value="">Sin grupo asignado</option>';
+
+    gruposAlumno.forEach(grupo => {
+
+        select.innerHTML += `
+        <option value="${grupo._id}">
+            ${grupo.nombre} · ${grupo.carrera || "General"}
+        </option>`;
+
+    });
+
+}
+
+function nombreGrupo(grupo){
+
+    if(!grupo){
+        return "Sin grupo";
+    }
+
+    if(typeof grupo === "object"){
+        return grupo.nombre || "Sin grupo";
+    }
+
+    const encontrado =
+    gruposAlumno.find(item => item._id === grupo);
+
+    return encontrado ? encontrado.nombre : "Sin grupo";
 
 }
 
@@ -305,11 +373,15 @@ async function cargarAlumnos(){
 
             <td>${alumno.matricula}</td>
 
+            <td>${alumno.correo || "Sin correo"}</td>
+
+            <td>${nombreGrupo(alumno.grupoId)}</td>
+
             <td>${alumno.carrera}</td>
 
             <td>${alumno.semestre}</td>
 
-            <td>${estadoBadge(alumno.activo !== false)}</td>
+            <td>${estadoBadge(alumno.estado || (alumno.activo !== false ? "activo" : "inactivo"))}</td>
 
             <td>
 
@@ -317,12 +389,14 @@ async function cargarAlumnos(){
 class="edit-btn"
 onclick="editarAlumno(
 '${alumno._id}',
-'${alumno.nombre}',
-'${alumno.matricula}',
-'${alumno.carrera}',
-'${alumno.semestre}',
-${alumno.activo !== false}
-)">
+	'${alumno.nombre}',
+	'${alumno.matricula}',
+    '${alumno.correo || ""}',
+	'${alumno.carrera}',
+	'${alumno.semestre}',
+    '${alumno.grupoId && alumno.grupoId._id ? alumno.grupoId._id : alumno.grupoId || ""}',
+	'${alumno.estado || (alumno.activo !== false ? "activo" : "inactivo")}'
+	)">
 
 Editar
 
@@ -379,14 +453,13 @@ async e => {
     const datos =
     Object.fromEntries(form);
 
-    datos.activo =
-    form.get("activo") === "on";
+    datos.estado = form.get("estado") || "activo";
 
     // EDITAR
 
     if(alumnoEditando){
 
-        await fetch(
+        const respuesta = await fetch(
 
         `/api/alumnos/${alumnoEditando}`,
 
@@ -401,6 +474,15 @@ async e => {
             body:JSON.stringify(datos)
 
         });
+
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            mostrarAlumnoMensaje(resultado.error || "Error actualizando alumno", "error");
+            return;
+        }
+
+        mostrarAlumnoMensaje(resultado.mensaje || "Alumno actualizado");
 
         alumnoEditando = null;
 
@@ -500,7 +582,15 @@ async function resetearContrasenaAlumno(id) {
 
 // MODAL
 
-function abrirModal(){
+function abrirModal(nuevo = true){
+
+    if(nuevo){
+        alumnoEditando = null;
+
+        document
+        .getElementById("formAlumno")
+        .reset();
+    }
 
     document
     .getElementById("modal")
@@ -538,14 +628,16 @@ function editarAlumno(
 id,
 nombre,
 matricula,
+correo,
 carrera,
 semestre,
-activo
+grupoId,
+estado
 ){
 
     alumnoEditando = id;
 
-    abrirModal();
+    abrirModal(false);
 
     document.querySelector(
     '[name="nombre"]'
@@ -556,6 +648,10 @@ activo
     ).value = matricula;
 
     document.querySelector(
+    '[name="correo"]'
+    ).value = correo;
+
+    document.querySelector(
     '[name="carrera"]'
     ).value = carrera;
 
@@ -564,13 +660,24 @@ activo
     ).value = semestre;
 
     document.querySelector(
-    '[name="activo"]'
-    ).checked = activo;
+    '[name="grupoId"]'
+    ).value = grupoId || "";
+
+    document.querySelector(
+    '[name="estado"]'
+    ).value = estado || "activo";
 
 }
 // INICIAR
 
-cargarAlumnos();
+Promise
+.all([
+    cargarOpcionesAlumno(),
+    cargarAlumnos()
+])
+.catch(error => {
+    mostrarAlumnoMensaje(error.message || "No se pudo cargar alumnos", "error");
+});
 
 </script>
 

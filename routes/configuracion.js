@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const Configuracion = require("../models/Configuracion");
 const { registrarActividad } = require("./actividades");
 
@@ -130,14 +131,21 @@ function crearRutasConfiguracion(verificarSesion, verificarAdmin){
             const admin =
             await Usuario.findById(req.session.usuario._id);
 
-            if(!admin || admin.password !== passwordActual){
+            const passwordValida =
+            admin &&
+            (
+                admin.password === passwordActual ||
+                await bcrypt.compare(passwordActual, admin.password)
+            );
+
+            if(!passwordValida){
                 return res.status(400).json({
                     error:"La contraseña actual es incorrecta"
                 });
             }
 
             admin.password =
-            nuevaPassword;
+            await bcrypt.hash(nuevaPassword, 10);
 
             await admin.save();
 

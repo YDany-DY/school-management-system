@@ -4,6 +4,10 @@ const iconosModulo = {
     Materias:"fa-book",
     Personal:"fa-id-badge",
     Configuración:"fa-gear",
+    Evaluación:"fa-clipboard-check",
+    Calificaciones:"fa-chart-line",
+    Asistencias:"fa-user-check",
+    Inscripciones:"fa-pencil",
     Seguridad:"fa-shield-halved",
     Sistema:"fa-server"
 };

@@ -1,51 +1,53 @@
-# School Management System
+# Sistema Escolar
 
-Web application for managing a school system with role-based authentication.
+Sistema escolar con Node.js, Express, MongoDB/Mongoose, sesiones, roles y módulos administrativos.
 
-## Features
+## Funcionalidades
 
-* Login system with roles (admin, administrative staff, teacher, student)
-* Role-based access control
-* MongoDB database integration
-* Dashboard for each user role
+- Login con sesión y redirección por rol.
+- Dashboards para administrador, personal, profesor y alumno.
+- CRUD de alumnos, materias, grupos, profesores y personal.
+- Generación de usuario y contraseña temporal para alumnos y personal.
+- Inscripciones de alumnos a materias y grupos.
+- Evaluación académica con criterios por materia/grupo, porcentajes que suman 100%, calificaciones por periodo y cálculo automático.
+- Registro de asistencias y cálculo de porcentaje para el alumno.
+- Dashboard de alumno con nombre, grupo, materias, calificaciones, promedio, asistencias y progreso con datos reales.
+- Actividades recientes para acciones importantes del sistema.
+- Script de datos demo para presentación.
 
-## User Roles
+## Roles
 
-- Administrator: Full system control
-- Administrative Staff: Manage students, courses, and records
-- Teacher: Manage courses, tasks, and grades
-- Student: View courses, tasks, and personal progress
+- `admin`: acceso total.
+- `personal`: acceso según permisos y cargo.
+- `maestro`: acceso al panel de profesor y evaluación.
+- `alumno`: acceso solo al portal del alumno.
 
-## Technologies
+## Ejecutar
 
-* HTML, CSS, JavaScript
-* Node.js
-* Express
-* MongoDB
-* Mongoose
-
-## Project Structure
-```text
-public/
-  ├── index.html
-  ├── admin.html
-  ├── alumno.html
-  ├── dashboard_admin.html
-  ├── dashboard_alumno.html
-  └── styles.css
-
-server.js
-package.json
-```
-
-## How to run
 ```bash
 npm install
+npm run seed
+npm start
+```
+
+También puedes arrancar directamente con:
+
+```bash
 node server.js
+```
 
-Then open in your browser:
+Abre:
+
+```text
 http://localhost:3000
+```
 
-## Note
+## Usuarios Demo
 
-This project is for educational and portfolio purposes. Unauthorized use or distribution is not permitted.
+Después de `npm run seed`:
+
+- Administrador: `admin` / `123456`
+- Alumno: `A001` / `alumno123`
+- Alumno: `A002` / `alumno123`
+
+MongoDB debe estar disponible en `mongodb://127.0.0.1:27017/sistema_escolar`.

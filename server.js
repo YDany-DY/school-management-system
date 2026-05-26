@@ -4,13 +4,16 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const session = require("express-session");
 const path = require("path");
+const { obtenerBaseUsuario, generarUsuarioUnico, generarPasswordTemporal } = require("./utils/userHelpers");
 const crearRutasConfiguracion = require("./routes/configuracion");
 const crearRutasUsuarios = require("./routes/usuarios");
 const crearRutasPersonal = require("./routes/personal");
+const crearRutasAcademicas = require("./routes/academico");
 const authRoutes = require("./routes/auth");
 const usuarioRoutes = require("./routes/usuario");
 const inscripcionesRoutes = require("./routes/inscripciones");
 require("./models/Usuario");
+require("./models/AsignacionProfesor");
 const {
     crearRutasActividades,
     registrarActividad
@@ -20,6 +23,7 @@ const {
     verificarRol,
     verificarPermiso
 } = require("./middleware/verificarRol");
+const crearRutasProfesor = require("./routes/profesor");
 
 const app = express();
 
@@ -36,7 +40,28 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// IMPORTANTE: quitar acceso directo a dashboards
+const rutasHtmlProtegidas = {
+    "/dashboard_admin.html":"/dashboard_admin",
+    "/dashboard_personal.html":"/dashboard_personal",
+    "/dashboard_maestro.html":"/dashboard_maestro",
+    "/dashboard_alumno.html":"/dashboard_alumno",
+    "/alumnos.html":"/alumnos",
+    "/maestros.html":"/maestros",
+    "/materias.html":"/materias",
+    "/grupos.html":"/grupos",
+    "/personal.html":"/personal",
+    "/configuracion.html":"/configuracion",
+    "/evaluacion.html":"/evaluacion"
+};
+
+app.use((req, res, next) => {
+    if(rutasHtmlProtegidas[req.path]){
+        return res.redirect(rutasHtmlProtegidas[req.path]);
+    }
+
+    next();
+});
+
 app.use(express.static("public", {
     index: "index.html"
 }));
@@ -49,99 +74,15 @@ mongoose.connect("mongodb://127.0.0.1:27017/sistema_escolar")
     .then(() => console.log("MongoDB conectado"))
     .catch(err => console.log(err));
 
-// ========================
-// MODELO USUARIO
-// ========================
-
 const Usuario = require("./models/Usuario");
-
-// ========================
-// MODELO ALUMNO
-// ========================
-
-const alumnoSchema = new mongoose.Schema({
-
-    nombre: String,
-    correo: String,
-    matricula: String,
-    carrera: String,
-    semestre: Number,
-    usuarioId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Usuario"
-    },
-    rol: {
-        type: String,
-        default: "alumno"
-    },
-    activo: Boolean
-
-});
-
-const Alumno = mongoose.model("Alumno", alumnoSchema);
-
-// ========================
-// MODELO MAESTRO
-// ========================
-
-const maestroSchema = new mongoose.Schema({
-
-    nombre: String,
-    correo: String,
-    especialidad: String,
-    activo: Boolean
-
-});
-
-const Maestro =
-mongoose.model("Maestro", maestroSchema);
-
-// ========================
-// MODELO MATERIA
-// ========================
-
-const materiaSchema =
-new mongoose.Schema({
-
-    nombre:String,
-
-    clave:String,
-
-    semestre:Number,
-
-    creditos:Number,
-
-    maestro:String,
-
-    activa:Boolean
-
-});
-
-const Materia =
-mongoose.model("Materia", materiaSchema);
-
-
-// ========================
-// MODELO GRUPO
-// ========================
-
-const grupoSchema =
-new mongoose.Schema({
-
-    nombre:String,
-
-    semestre:Number,
-
-    carrera:String,
-
-    tutor:String,
-
-    activo:Boolean
-
-});
-
-const Grupo =
-mongoose.model("Grupo", grupoSchema);
+const Alumno = require("./models/Alumno");
+const Maestro = require("./models/Maestro");
+const Materia = require("./models/Materia");
+const Grupo = require("./models/Grupo");
+require("./models/Inscripcion");
+require("./models/CriterioEvaluacion");
+require("./models/Calificacion");
+require("./models/Asistencia");
 
 
 const verificarAdmin =
@@ -279,11 +220,11 @@ app.get("/dashboard_administrativo", verificarSesion, (req, res) => {
     res.redirect("/dashboard_personal");
 });
 
-app.get("/dashboard_maestro", verificarSesion, verificarRol("maestro"), (req, res) => {
+app.get("/dashboard_maestro", verificarSesion, verificarRol("admin", "maestro"), (req, res) => {
     res.sendFile(path.join(__dirname, "public/dashboard_maestro.html"));
 });
 
-app.get("/dashboard_alumno", verificarSesion, verificarRol("alumno"), (req, res) => {
+app.get("/dashboard_alumno", verificarSesion, verificarRol("admin", "personal", "alumno"), (req, res) => {
     res.sendFile(path.join(__dirname, "public/dashboard_alumno.html"));
 });
 
@@ -309,6 +250,18 @@ app.use(
 crearRutasActividades(
 verificarSesion,
 verificarAdmin
+));
+
+app.use(
+crearRutasProfesor(
+verificarSesion,
+verificarRol
+));
+
+app.use(
+crearRutasAcademicas(
+verificarSesion,
+verificarRol
 ));
 
 // ========================
@@ -449,7 +402,7 @@ async (req, res) => {
             alertas.push({
                 tipo:"warning",
                 icono:"fa-users",
-                texto:`${gruposSinTutor} grupo(s) sin instructor o tutor asignado`
+                texto:`${gruposSinTutor} grupo(s) sin profesor o tutor asignado`
             });
         }
 
@@ -482,7 +435,7 @@ async (req, res) => {
 });
 
 // ========================
-// CRUD ADMINISTRATIVOS
+// CRUD PERSONAL LEGADO
 // ========================
 
 app.get("/api/administrativos",
@@ -504,7 +457,7 @@ async (req, res) => {
     } catch(error){
 
         res.status(500).json({
-            error:"Error obteniendo administrativos"
+            error:"Error obteniendo personal"
         });
 
     }
@@ -530,13 +483,13 @@ async (req, res) => {
         await nuevoAdministrativo.save();
 
         res.json({
-            mensaje:"Administrativo agregado"
+            mensaje:"Personal agregado"
         });
 
     } catch(error){
 
         res.status(500).json({
-            error:"Error agregando administrativo"
+            error:"Error agregando personal"
         });
 
     }
@@ -558,7 +511,7 @@ async (req, res) => {
         };
 
         if (req.body.password) {
-            datos.password = req.body.password;
+            datos.password = await bcrypt.hash(req.body.password, 10);
         }
 
         await Usuario.findOneAndUpdate(
@@ -572,13 +525,13 @@ async (req, res) => {
         );
 
         res.json({
-            mensaje:"Administrativo actualizado"
+            mensaje:"Personal actualizado"
         });
 
     } catch(error){
 
         res.status(500).json({
-            error:"Error actualizando administrativo"
+            error:"Error actualizando personal"
         });
 
     }
@@ -600,13 +553,13 @@ async (req, res) => {
         });
 
         res.json({
-            mensaje:"Administrativo eliminado"
+            mensaje:"Personal eliminado"
         });
 
     } catch(error){
 
         res.status(500).json({
-            error:"Error eliminando administrativo"
+            error:"Error eliminando personal"
         });
 
     }
@@ -623,7 +576,9 @@ app.get("/api/alumnos", verificarSesion, verificarPermiso("alumnos"), async (req
 
     try {
 
-        const alumnos = await Alumno.find();
+        const alumnos = await Alumno.find()
+            .populate("grupoId", "nombre semestre carrera")
+            .sort({ nombre:1 });
 
         res.json(alumnos);
 
@@ -637,13 +592,37 @@ app.get("/api/alumnos", verificarSesion, verificarPermiso("alumnos"), async (req
 
 });
 
+app.get("/api/alumnos/opciones",
+verificarSesion,
+verificarPermiso("alumnos"),
+async (req, res) => {
+
+    try {
+
+        const grupos =
+        await Grupo.find({ activo:{ $ne:false } })
+        .select("nombre semestre carrera")
+        .sort({ nombre:1 });
+
+        res.json({ grupos });
+
+    } catch(error){
+
+        res.status(500).json({
+            error:"Error obteniendo opciones para alumnos"
+        });
+
+    }
+
+});
+
 // AGREGAR ALUMNO
 
 app.post("/api/alumnos", verificarSesion, verificarPermiso("alumnos"), async (req, res) => {
 
     try {
 
-        const { nombre, matricula, carrera, semestre, activo } = req.body;
+        const { nombre, matricula, correo, carrera, semestre, grupoId, activo } = req.body;
 
         if (!nombre || !matricula || !carrera || !semestre) {
             return res.status(400).json({
@@ -651,36 +630,45 @@ app.post("/api/alumnos", verificarSesion, verificarPermiso("alumnos"), async (re
             });
         }
 
-        const alumnoExistente = await Alumno.findOne({ matricula });
-        const usuarioExistente = await Usuario.findOne({ usuario: matricula });
+        const criteriosAlumno = [{ matricula }];
+        const criteriosUsuario = [{ usuario: matricula }];
+
+        if(correo){
+            criteriosAlumno.push({ correo });
+            criteriosUsuario.push({ correo });
+        }
+
+        const alumnoExistente = await Alumno.findOne({ $or:criteriosAlumno });
+        const usuarioExistente = await Usuario.findOne({ $or:criteriosUsuario });
 
         if (alumnoExistente || usuarioExistente) {
             return res.status(400).json({
-                error: "Ya existe un alumno con esa matrícula o usuario"
+                error: "Ya existe un alumno con esa matrícula, correo o usuario"
             });
         }
 
-        const passwordTemporal = matricula;
-        const passwordHash = await bcrypt.hash(passwordTemporal, 10);
+        const passwordTemporal = req.body.password || generarPasswordTemporal();
 
         const nuevoUsuario = new Usuario({
             usuario: matricula,
-            password: passwordHash,
+            password: passwordTemporal,
             rol: "alumno",
             primerLogin: true,
             activo: true,
+            estado: "activo",
             nombre,
-            correo: req.body.correo || ""
+            correo: correo || ""
         });
 
         await nuevoUsuario.save();
 
         const nuevoAlumno = new Alumno({
             nombre,
-            correo: req.body.correo || "",
+            correo: correo || "",
             matricula,
             carrera,
-            semestre,
+            semestre:Number(semestre),
+            grupoId:grupoId || null,
             usuarioId: nuevoUsuario._id,
             activo: activo !== false
         });
@@ -772,7 +760,29 @@ async (req, res) => {
 
     try {
 
-        await Alumno.findByIdAndDelete(req.params.id);
+        const alumno = await Alumno.findById(req.params.id);
+
+        if(!alumno){
+            return res.status(404).json({
+                error:"Alumno no encontrado"
+            });
+        }
+
+        await Promise.all([
+            Alumno.findByIdAndDelete(req.params.id),
+            alumno.usuarioId ? Usuario.findByIdAndDelete(alumno.usuarioId) : Usuario.findOneAndDelete({ usuario:alumno.matricula }),
+            mongoose.model("Inscripcion").deleteMany({ alumnoId:req.params.id }),
+            mongoose.model("Calificacion").deleteMany({ alumnoId:req.params.id }),
+            mongoose.model("Asistencia").deleteMany({ alumnoId:req.params.id })
+        ]);
+
+        await registrarActividad({
+            usuario:req.session.usuario.usuario,
+            rol:req.session.usuario.rol,
+            accion:"eliminar",
+            modulo:"Alumnos",
+            descripcion:`Alumno eliminado: ${alumno.nombre}`
+        });
 
         res.json({
             mensaje: "Alumno eliminado"
@@ -797,9 +807,59 @@ async (req, res) => {
 
     try {
 
-        console.log("EDITANDO:", req.params.id);
+        const { nombre, matricula, correo, carrera, semestre, grupoId, estado } = req.body;
 
-        console.log(req.body);
+        if(!nombre || !matricula || !carrera || !semestre){
+            return res.status(400).json({
+                error:"Nombre, matrícula, carrera y semestre son obligatorios"
+            });
+        }
+
+        const alumnoActual = await Alumno.findById(req.params.id);
+
+        if(!alumnoActual){
+            return res.status(404).json({
+                error:"Alumno no encontrado"
+            });
+        }
+
+        const criteriosAlumno = [{ matricula }];
+        const criteriosUsuario = [{ usuario:matricula }];
+
+        if(correo){
+            criteriosAlumno.push({ correo });
+            criteriosUsuario.push({ correo });
+        }
+
+        const alumnoDuplicado = await Alumno.findOne({
+            _id:{ $ne:req.params.id },
+            $or:criteriosAlumno
+        });
+
+        if(alumnoDuplicado){
+            return res.status(400).json({
+                error:"Ya existe otro alumno con esa matrícula o correo"
+            });
+        }
+
+        let usuarioAlumno = alumnoActual.usuarioId
+            ? await Usuario.findById(alumnoActual.usuarioId)
+            : await Usuario.findOne({ usuario:alumnoActual.matricula });
+
+        if(usuarioAlumno){
+            const usuarioDuplicado = await Usuario.findOne({
+                _id:{ $ne:usuarioAlumno._id },
+                $or:criteriosUsuario
+            });
+
+            if(usuarioDuplicado){
+                return res.status(400).json({
+                    error:"Ya existe otro usuario con esa matrícula o correo"
+                });
+            }
+        }
+
+        const estadoAlumno = estado || "activo";
 
         const alumnoActualizado =
         await Alumno.findByIdAndUpdate(
@@ -807,11 +867,14 @@ async (req, res) => {
             req.params.id,
 
             {
-                nombre: req.body.nombre,
-                matricula: req.body.matricula,
-                carrera: req.body.carrera,
-                semestre: req.body.semestre,
-                activo: req.body.activo === true
+                nombre,
+                correo: correo || "",
+                matricula,
+                carrera,
+                semestre:Number(semestre),
+                grupoId:grupoId || null,
+                activo: estadoAlumno === "activo",
+                estado: estadoAlumno
             },
 
             {
@@ -820,14 +883,21 @@ async (req, res) => {
 
         );
 
-        console.log(alumnoActualizado);
+        if(usuarioAlumno){
+            usuarioAlumno.nombre = nombre;
+            usuarioAlumno.correo = correo || "";
+            usuarioAlumno.usuario = matricula;
+            usuarioAlumno.activo = estadoAlumno === "activo";
+            usuarioAlumno.estado = estadoAlumno;
+            await usuarioAlumno.save();
+        }
 
         await registrarActividad({
             usuario:req.session.usuario.usuario,
             rol:req.session.usuario.rol,
             accion:"editar",
             modulo:"Alumnos",
-            descripcion:`Alumno actualizado: ${req.body.nombre}`
+            descripcion:`Alumno actualizado: ${nombre}`
         });
 
         res.json({
@@ -873,6 +943,21 @@ async (req, res) => {
 
 });
 
+app.get(
+"/api/maestros/:id",
+verificarSesion,
+verificarPermiso("maestros"),
+async (req, res) => {
+    try {
+        const maestro = await Maestro.findById(req.params.id);
+        if(!maestro){
+            return res.status(404).json({ error: "Maestro no encontrado" });
+        }
+        res.json(maestro);
+    } catch(error){
+        res.status(500).json({ error: "Error obteniendo maestro" });
+    }
+});
 
 app.post(
 "/api/maestros",
@@ -881,43 +966,75 @@ verificarPermiso("maestros"),
 async (req, res) => {
 
     try {
+        if(!req.body.nombre || !req.body.correo){
+            return res.status(400).json({
+                error:"Nombre y correo son obligatorios"
+            });
+        }
 
-        const nuevoMaestro =
-        new Maestro({
+        // Normalizar correo para comparaciones y guardado
+        const correoNorm = (req.body.correo || "").trim().toLowerCase();
 
-            nombre:req.body.nombre,
-            correo:req.body.correo,
-            especialidad:req.body.especialidad,
-            activo:true
+        const existe = await Maestro.findOne({ correo: correoNorm });
+        const usuarioExiste = await Usuario.findOne({ correo: correoNorm });
 
+        // Si existe un usuario maestro huérfano (usuario existe pero maestro no), eliminarlo y continuar
+        if(usuarioExiste && !existe && usuarioExiste.rol === "maestro"){
+            await Usuario.findByIdAndDelete(usuarioExiste._id);
+        }
+
+        if(existe || (await Usuario.findOne({ correo: correoNorm }))) {
+            return res.status(400).json({
+                error:"Ya existe un profesor con ese correo"
+            });
+        }
+
+        const nuevoMaestro = new Maestro({
+            nombre: req.body.nombre,
+            correo: correoNorm,
+            especialidad: req.body.especialidad,
+            activo: true,
+            estado: "activo"
         });
 
        await nuevoMaestro.save();
 
-// CREAR USUARIO AUTOMÁTICAMENTE
+        const baseUsuario = obtenerBaseUsuario(correoNorm, req.body.nombre);
+        const usuarioGenerado = await generarUsuarioUnico(baseUsuario, Usuario);
+        const contrasenaTemporal = generarPasswordTemporal();
 
-const passwordHash = await bcrypt.hash("123456", 10);
+        const nuevoUsuario = new Usuario({
+            nombre: req.body.nombre,
+            correo: correoNorm,
+            usuario: usuarioGenerado,
+            password: contrasenaTemporal,
+            rol: "maestro",
+            primerLogin: true,
+            activo: true,
+            estado: "activo",
+            fechaRestablecimiento: new Date()
+        });
 
-const nuevoUsuario = new Usuario({
-    nombre: req.body.nombre,
-    correo: req.body.correo,
-    usuario: req.body.correo,
-    password: passwordHash,
-    rol: "maestro",
-    primerLogin: true,
-    activo: true
+        await nuevoUsuario.save();
+
+await registrarActividad({
+    usuario:req.session.usuario.usuario,
+    rol:req.session.usuario.rol,
+    accion:"crear",
+    modulo:"Personal",
+    descripcion:`Profesor agregado: ${req.body.nombre}`
 });
 
-await nuevoUsuario.save();
-
 res.json({
-    mensaje: "Maestro agregado"
+    mensaje: "Profesor agregado",
+            usuario:usuarioGenerado,
+            contrasenaTemporal:contrasenaTemporal
 });
 
     } catch(error){
 
         res.status(500).json({
-            error:"Error agregando maestro"
+            error:"Error creando maestro"
         });
 
     }
@@ -932,9 +1049,19 @@ async (req, res) => {
 
     try {
 
-        await Maestro.findByIdAndDelete(
-        req.params.id
-        );
+        const maestro = await Maestro.findByIdAndDelete(req.params.id);
+
+        if(!maestro){
+            return res.status(404).json({ error:"Maestro no encontrado" });
+        }
+
+        // Eliminar usuario asociado (case-insensitive)
+        const correoMaestro = (maestro.correo || "").trim();
+        let usuarioBorrado = await Usuario.findOneAndDelete({ correo: correoMaestro, rol: "maestro" });
+        if(!usuarioBorrado){
+            // intentar case-insensitive
+            usuarioBorrado = await Usuario.findOneAndDelete({ correo: { $regex: `^${correoMaestro.replace(/[-\\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, $options: 'i' }, rol: "maestro" });
+        }
 
         res.json({
             mensaje:"Maestro eliminado"
@@ -957,18 +1084,34 @@ verificarPermiso("maestros"),
 async (req, res) => {
 
     try {
+        const estado = req.body.estado || "activo";
+
+        const maestroActual = await Maestro.findById(req.params.id);
+
+        if(!maestroActual){
+            return res.status(404).json({ error:"Maestro no encontrado" });
+        }
 
         await Maestro.findByIdAndUpdate(
-
             req.params.id,
-
             {
                 nombre:req.body.nombre,
                 correo:req.body.correo,
-                especialidad:req.body.especialidad
+                especialidad:req.body.especialidad,
+                activo: estado === "activo",
+                estado
             }
-
         );
+
+        const usuarioMaestro = await Usuario.findOne({ correo: maestroActual.correo });
+
+        if(usuarioMaestro){
+            usuarioMaestro.nombre = req.body.nombre;
+            usuarioMaestro.correo = req.body.correo;
+            usuarioMaestro.activo = estado === "activo";
+            usuarioMaestro.estado = estado;
+            await usuarioMaestro.save();
+        }
 
         res.json({
             mensaje:"Maestro actualizado"
@@ -982,6 +1125,47 @@ async (req, res) => {
 
     }
 
+});
+
+app.post(
+"/api/maestros/:id/reset-password",
+verificarSesion,
+verificarPermiso("maestros"),
+async (req, res) => {
+    try {
+        const maestro = await Maestro.findById(req.params.id);
+
+        if(!maestro){
+            return res.status(404).json({ error:"Maestro no encontrado" });
+        }
+
+        // Buscar usuario case-insensitive por correo del maestro
+        const correoMaestro = (maestro.correo || "").trim();
+        let usuarioMaestro = await Usuario.findOne({ correo: correoMaestro, rol: "maestro" });
+        if(!usuarioMaestro){
+            usuarioMaestro = await Usuario.findOne({ correo: { $regex: `^${correoMaestro.replace(/[-\\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, $options: 'i' }, rol: "maestro" });
+        }
+
+        if(!usuarioMaestro){
+            return res.status(404).json({ error:"Usuario de maestro no encontrado" });
+        }
+
+        const contrasenaTemporal = generarPasswordTemporal();
+        usuarioMaestro.password = await bcrypt.hash(contrasenaTemporal, 10);
+        usuarioMaestro.primerLogin = true;
+        usuarioMaestro.fechaRestablecimiento = new Date();
+
+        await usuarioMaestro.save();
+
+        res.json({
+            mensaje: "Contraseña temporal restablecida",
+            usuario: usuarioMaestro.usuario,
+            contrasenaTemporal
+        });
+
+    } catch(error){
+        res.status(500).json({ error:"Error restableciendo contraseña" });
+    }
 });
 
 app.get(
@@ -1014,20 +1198,44 @@ verificarPermiso("materias"),
 async (req, res) => {
 
     try {
+        const { nombre, clave, semestre, creditos, maestro, activa, grupoIds } = req.body;
+
+        if(!nombre || !clave || !semestre || !creditos){
+            return res.status(400).json({
+                error:"Nombre, clave, semestre y créditos son obligatorios"
+            });
+        }
+
+        const existe = await Materia.findOne({ clave });
+
+        if(existe){
+            return res.status(400).json({
+                error:"Ya existe una materia con esa clave"
+            });
+        }
 
         const nuevaMateria =
         new Materia({
 
-            nombre:req.body.nombre,
-            clave:req.body.clave,
-            semestre:req.body.semestre,
-            creditos:req.body.creditos,
-            maestro:req.body.maestro,
-            activa:true
+            nombre,
+            clave,
+            semestre:Number(semestre),
+            creditos:Number(creditos),
+            maestro:maestro || "",
+            grupoIds:Array.isArray(grupoIds) ? grupoIds : [],
+            activa:activa !== false
 
         });
 
         await nuevaMateria.save();
+
+        await registrarActividad({
+            usuario:req.session.usuario.usuario,
+            rol:req.session.usuario.rol,
+            accion:"crear",
+            modulo:"Materias",
+            descripcion:`Materia creada: ${nombre}`
+        });
 
         res.json({
             mensaje:"Materia agregada"
@@ -1051,9 +1259,28 @@ async (req, res) => {
 
     try {
 
-        await Materia.findByIdAndDelete(
-        req.params.id
-        );
+        const materia = await Materia.findById(req.params.id);
+
+        if(!materia){
+            return res.status(404).json({
+                error:"Materia no encontrada"
+            });
+        }
+
+        await Promise.all([
+            Materia.findByIdAndDelete(req.params.id),
+            mongoose.model("Inscripcion").deleteMany({ materiaId:req.params.id }),
+            mongoose.model("Calificacion").deleteMany({ materiaId:req.params.id }),
+            mongoose.model("Asistencia").deleteMany({ materiaId:req.params.id })
+        ]);
+
+        await registrarActividad({
+            usuario:req.session.usuario.usuario,
+            rol:req.session.usuario.rol,
+            accion:"eliminar",
+            modulo:"Materias",
+            descripcion:`Materia eliminada: ${materia.nombre}`
+        });
 
         res.json({
             mensaje:"Materia eliminada"
@@ -1076,17 +1303,37 @@ verificarPermiso("materias"),
 async (req, res) => {
 
     try {
+        const { nombre, clave, semestre, creditos, maestro, activa, grupoIds } = req.body;
+
+        if(!nombre || !clave || !semestre || !creditos){
+            return res.status(400).json({
+                error:"Nombre, clave, semestre y créditos son obligatorios"
+            });
+        }
+
+        const duplicada = await Materia.findOne({
+            clave,
+            _id:{ $ne:req.params.id }
+        });
+
+        if(duplicada){
+            return res.status(400).json({
+                error:"Ya existe otra materia con esa clave"
+            });
+        }
 
         await Materia.findByIdAndUpdate(
 
             req.params.id,
 
             {
-                nombre:req.body.nombre,
-                clave:req.body.clave,
-                semestre:req.body.semestre,
-                creditos:req.body.creditos,
-                maestro:req.body.maestro
+                nombre,
+                clave,
+                semestre:Number(semestre),
+                creditos:Number(creditos),
+                maestro:maestro || "",
+                grupoIds:Array.isArray(grupoIds) ? grupoIds : [],
+                activa:activa === true
             }
 
         );
@@ -1096,7 +1343,7 @@ async (req, res) => {
             rol:req.session.usuario.rol,
             accion:"editar",
             modulo:"Materias",
-            descripcion:`Materia actualizada: ${req.body.nombre}`
+            descripcion:`Materia actualizada: ${nombre}`
         });
 
         res.json({
@@ -1139,9 +1386,29 @@ async (req, res) => {
     try {
 
         const grupos =
-        await Grupo.find();
+        await Grupo.find().sort({ nombre:1 });
 
-        res.json(grupos);
+        const Inscripcion = mongoose.model("Inscripcion");
+
+        const gruposConConteos = await Promise.all(
+            grupos.map(async grupo => {
+                const [alumnosCount, materiasInscritas] = await Promise.all([
+                    Alumno.countDocuments({ grupoId:grupo._id }),
+                    Inscripcion.distinct("materiaId", { grupoId:grupo._id, estado:{ $ne:"archivada" } })
+                ]);
+
+                const item = grupo.toObject();
+                item.alumnosCount = alumnosCount;
+                item.materiasCount = new Set([
+                    ...(item.materiaIds || []).map(id => String(id)),
+                    ...materiasInscritas.map(id => String(id))
+                ]).size;
+
+                return item;
+            })
+        );
+
+        res.json(gruposConConteos);
 
     } catch(error){
 
@@ -1160,15 +1427,31 @@ verificarPermiso("grupos"),
 async (req, res) => {
 
     try {
+        const { nombre, semestre, carrera, tutor, activo, materiaIds } = req.body;
+
+        if(!nombre || !semestre || !carrera){
+            return res.status(400).json({
+                error:"Nombre, semestre y carrera son obligatorios"
+            });
+        }
+
+        const duplicado = await Grupo.findOne({ nombre, semestre:Number(semestre), carrera });
+
+        if(duplicado){
+            return res.status(400).json({
+                error:"Ya existe un grupo con ese nombre, semestre y carrera"
+            });
+        }
 
         const nuevoGrupo =
         new Grupo({
 
-            nombre:req.body.nombre,
-            semestre:req.body.semestre,
-            carrera:req.body.carrera,
-            tutor:req.body.tutor,
-            activo:req.body.activo === true
+            nombre,
+            semestre:Number(semestre),
+            carrera,
+            tutor:tutor || "",
+            materiaIds:Array.isArray(materiaIds) ? materiaIds : [],
+            activo:activo !== false
 
         });
 
@@ -1179,7 +1462,7 @@ async (req, res) => {
             rol:req.session.usuario.rol,
             accion:"crear",
             modulo:"Grupos",
-            descripcion:`Grupo creado: ${req.body.nombre}`
+            descripcion:`Grupo creado: ${nombre}`
         });
 
         res.json({
@@ -1204,9 +1487,29 @@ async (req, res) => {
 
     try {
 
-        await Grupo.findByIdAndDelete(
-        req.params.id
-        );
+        const grupo = await Grupo.findById(req.params.id);
+
+        if(!grupo){
+            return res.status(404).json({
+                error:"Grupo no encontrado"
+            });
+        }
+
+        await Promise.all([
+            Grupo.findByIdAndDelete(req.params.id),
+            Alumno.updateMany({ grupoId:req.params.id }, { $set:{ grupoId:null } }),
+            mongoose.model("Inscripcion").deleteMany({ grupoId:req.params.id }),
+            mongoose.model("Calificacion").deleteMany({ grupoId:req.params.id }),
+            mongoose.model("Asistencia").deleteMany({ grupoId:req.params.id })
+        ]);
+
+        await registrarActividad({
+            usuario:req.session.usuario.usuario,
+            rol:req.session.usuario.rol,
+            accion:"eliminar",
+            modulo:"Grupos",
+            descripcion:`Grupo eliminado: ${grupo.nombre}`
+        });
 
         res.json({
             mensaje:"Grupo eliminado"
@@ -1229,20 +1532,49 @@ verificarPermiso("grupos"),
 async (req, res) => {
 
     try {
+        const { nombre, semestre, carrera, tutor, activo, materiaIds } = req.body;
+
+        if(!nombre || !semestre || !carrera){
+            return res.status(400).json({
+                error:"Nombre, semestre y carrera son obligatorios"
+            });
+        }
+
+        const duplicado = await Grupo.findOne({
+            nombre,
+            semestre:Number(semestre),
+            carrera,
+            _id:{ $ne:req.params.id }
+        });
+
+        if(duplicado){
+            return res.status(400).json({
+                error:"Ya existe otro grupo con ese nombre, semestre y carrera"
+            });
+        }
 
         await Grupo.findByIdAndUpdate(
 
             req.params.id,
 
             {
-                nombre:req.body.nombre,
-                semestre:req.body.semestre,
-                carrera:req.body.carrera,
-                tutor:req.body.tutor,
-                activo:req.body.activo === true
+                nombre,
+                semestre:Number(semestre),
+                carrera,
+                tutor:tutor || "",
+                materiaIds:Array.isArray(materiaIds) ? materiaIds : [],
+                activo:activo === true
             }
 
         );
+
+        await registrarActividad({
+            usuario:req.session.usuario.usuario,
+            rol:req.session.usuario.rol,
+            accion:"editar",
+            modulo:"Grupos",
+            descripcion:`Grupo actualizado: ${nombre}`
+        });
 
         res.json({
             mensaje:"Grupo actualizado"

@@ -70,6 +70,20 @@ Grupos
 
 </a>
 
+<a href="/inscripciones">
+
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+
+</a>
+
+<a href="/evaluacion">
+
+<i class="fa-solid fa-clipboard-check"></i>
+Evaluación
+
+</a>
+
 <a href="/personal">
 
 <i class="fa-solid fa-people-group"></i>
@@ -183,6 +197,11 @@ name="especialidad"
 placeholder="Especialidad"
 required>
 
+<select name="estado" required>
+    <option value="activo">Activo</option>
+    <option value="inactivo">Inactivo</option>
+    <option value="suspendido">Suspendido</option>
+</select>
 
 <div class="modal-buttons">
 
@@ -217,20 +236,15 @@ Guardar
 
 let maestroEditando = null;
 
-function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
-
-    const clase =
-    activo ? "active-status" : "inactive-status";
-
-    const texto =
-    activo ? textoActivo : textoInactivo;
-
+function estadoBadge(estado){
+    const activo = estado === "activo";
+    const clase = activo ? "active-status" : "inactive-status";
+    const texto = estado === "suspendido" ? "Suspendido" : activo ? "Activo" : "Inactivo";
     return `
     <span class="status-badge ${clase}">
         <i class="fa-solid fa-circle"></i>
         ${texto}
     </span>`;
-
 }
 
 // CARGAR MAESTROS
@@ -260,10 +274,26 @@ async function cargarMaestros(){
 
             <td>${maestro.especialidad}</td>
 
-            <td>${estadoBadge(maestro.activo !== false)}</td>
+            <td>${estadoBadge(maestro.estado || (maestro.activo !== false ? "activo" : "inactivo"))}</td>
         
 
             <td>
+
+                <button
+class="view-btn"
+onclick="verMaestro('${maestro._id}')">
+
+Ver
+
+</button>
+
+                <button
+class="reset-btn"
+onclick="resetearContrasenaMaestro('${maestro._id}')">
+
+Reset contraseña
+
+</button>
 
                 <button
 class="edit-btn"
@@ -271,7 +301,8 @@ onclick="editarMaestro(
 '${maestro._id}',
 '${maestro.nombre}',
 '${maestro.correo}',
-'${maestro.especialidad}'
+'${maestro.especialidad}',
+'${maestro.estado || (maestro.activo !== false ? "activo" : "inactivo")}'
 )">
 
 Editar
@@ -307,6 +338,7 @@ async e => {
 
     const datos =
     Object.fromEntries(form);
+    datos.estado = form.get("estado") || "activo";
 
     // EDITAR
 
@@ -336,7 +368,7 @@ async e => {
 
     else{
 
-        await fetch("/api/maestros", {
+        const respuesta = await fetch("/api/maestros", {
 
             method:"POST",
 
@@ -347,6 +379,15 @@ async e => {
             body:JSON.stringify(datos)
 
         });
+
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            alert(resultado.error || "Error creando maestro");
+            return;
+        }
+
+        alert(`Maestro registrado correctamente. Usuario: ${resultado.usuario}. Contraseña temporal: ${resultado.contrasenaTemporal}`);
 
     }
 
@@ -375,6 +416,35 @@ async function eliminarMaestro(id){
 
 }
 
+async function resetearContrasenaMaestro(id){
+    if(!confirm("¿Restablecer la contraseña temporal del maestro?"))
+    return;
+
+    const res = await fetch(`/api/maestros/${id}/reset-password`, {
+        method: "POST"
+    });
+
+    if(!res.ok){
+        const msg = await res.json().catch(() => ({}));
+        alert(msg.error || "No se pudo restablecer la contraseña.");
+        return;
+    }
+
+    const data = await res.json();
+    alert(`Contraseña restablecida. Usuario: ${data.usuario}. Nueva contraseña temporal: ${data.contrasenaTemporal}`);
+    cargarMaestros();
+}
+
+async function verMaestro(id){
+    const res = await fetch(`/api/maestros/${id}`);
+    if(!res.ok){
+        alert("No se encontró el maestro.");
+        return;
+    }
+    const maestro = await res.json();
+    alert(`Maestro: ${maestro.nombre}\nCorreo: ${maestro.correo}\nEspecialidad: ${maestro.especialidad}\nEstado: ${maestro.estado || 'activo'}`);
+}
+
 // MODAL
 
 function abrirModal(){
@@ -398,7 +468,8 @@ function editarMaestro(
 id,
 nombre,
 correo,
-especialidad
+    especialidad,
+    estado
 ){
 
     maestroEditando = id;
@@ -417,9 +488,10 @@ especialidad
     '[name="especialidad"]'
     ).value = especialidad;
 
+    document.querySelector(
+    '[name="estado"]'
+    ).value = estado || "activo";
 }
-
-// INICIAR
 
 cargarMaestros();
 

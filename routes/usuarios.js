@@ -1,5 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const {
+    obtenerBaseUsuario,
+    generarUsuarioUnico,
+    generarPasswordTemporal
+} = require("../utils/userHelpers");
 
 const router = express.Router();
 
@@ -84,7 +90,7 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
 
             const existe =
             await Usuario.findOne({
-                usuario:req.body.correo
+                correo:req.body.correo
             });
 
             if(existe){
@@ -103,24 +109,34 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
 
             if(alumnoExistente){
                 return res.status(400).json({
-                    error:"Ese dato pertenece a un alumno y no puede usarse como usuario administrativo"
+                    error:"Ese dato pertenece a un alumno y no puede usarse como usuario de personal"
                 });
             }
+
+            const baseUsuario = obtenerBaseUsuario(req.body.correo, req.body.nombre);
+            const usuarioGenerado = await generarUsuarioUnico(baseUsuario, Usuario);
+            const passwordTemporal = req.body.password || generarPasswordTemporal();
+            const estado = req.body.estado || "activo";
 
             const nuevoUsuario =
             new Usuario({
                 nombre:req.body.nombre,
                 correo:req.body.correo,
-                usuario:req.body.correo,
-                password:req.body.password,
+                usuario:usuarioGenerado,
+                password:passwordTemporal,
                 rol,
-                activo:req.body.activo !== false
+                activo:estado === "activo",
+                estado,
+                primerLogin:true,
+                fechaRestablecimiento:new Date()
             });
 
             await nuevoUsuario.save();
 
             res.json({
-                mensaje:"Usuario creado correctamente"
+                mensaje:"Usuario creado correctamente",
+                usuario:usuarioGenerado,
+                contrasenaTemporal:passwordTemporal
             });
 
         } catch(error){
@@ -163,7 +179,7 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
 
             if(!usuarioActual || !esRolAutorizado(usuarioActual.rol)){
                 return res.status(403).json({
-                    error:"Este registro no pertenece al módulo de usuarios administrativos"
+                    error:"Este registro no pertenece al módulo de personal autorizado"
                 });
             }
 
@@ -191,7 +207,7 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
 
             if(alumnoExistente){
                 return res.status(400).json({
-                    error:"Ese dato pertenece a un alumno y no puede usarse como usuario administrativo"
+                    error:"Ese dato pertenece a un alumno y no puede usarse como usuario de personal"
                 });
             }
 
@@ -204,7 +220,7 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
             };
 
             if(req.body.password){
-                datos.password = req.body.password;
+                datos.password = await bcrypt.hash(req.body.password, 10);
             }
 
             await Usuario.findByIdAndUpdate(
@@ -247,7 +263,7 @@ function crearRutasUsuarios(verificarSesion, verificarAdmin){
 
             if(!usuarioActual || !esRolAutorizado(usuarioActual.rol)){
                 return res.status(403).json({
-                    error:"Este registro no pertenece al módulo de usuarios administrativos"
+                    error:"Este registro no pertenece al módulo de personal autorizado"
                 });
             }
 

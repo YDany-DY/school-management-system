@@ -27,11 +27,12 @@ let configuracionActual = {};
 const cargosTexto = {
     administrador:"Administrador",
     admin:"Administrador",
-    instructor:"Instructor",
+    profesor:"Profesor",
+    instructor:"Profesor",
     auxiliar:"Auxiliar",
     capturista:"Capturista",
     coordinador:"Coordinador",
-    maestro:"Instructor",
+    maestro:"Profesor",
     administrativo:"Auxiliar"
 };
 
@@ -226,7 +227,7 @@ function editarUsuario(id, nombre, correo, cargo, activo){
     "";
 
     formUsuario.cargo.value =
-    cargo === "admin" ? "administrador" : cargo === "maestro" ? "instructor" : cargo === "administrativo" ? "auxiliar" : cargo;
+    cargo === "admin" ? "administrador" : cargo === "maestro" || cargo === "instructor" ? "profesor" : cargo === "administrativo" ? "auxiliar" : cargo;
 
     formUsuario.activo.checked =
     activo;
@@ -361,15 +362,6 @@ formUsuario.addEventListener("submit", async e => {
         return;
     }
 
-    if(!datos.id && !datos.password){
-        mostrarMensaje(
-        "mensajeUsuarios",
-        "La contraseña es obligatoria para personal nuevo",
-        "error"
-        );
-        return;
-    }
-
     try {
 
         const editando =
@@ -396,9 +388,14 @@ formUsuario.addEventListener("submit", async e => {
 
         cerrarModalUsuario();
 
+        const credenciales =
+        !editando && respuesta.contrasenaTemporal
+        ? `${respuesta.mensaje}. Usuario: ${respuesta.usuario}. Contraseña temporal: ${respuesta.contrasenaTemporal}`
+        : respuesta.mensaje;
+
         mostrarMensaje(
         "mensajeUsuarios",
-        respuesta.mensaje,
+        credenciales,
         "success"
         );
 

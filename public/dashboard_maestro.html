@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Profesor</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div>
+            <div class="logo">
+                <h2>Sistema Escolar</h2>
+                <p>Profesor</p>
+            </div>
+            <nav>
+                <a href="/dashboard_maestro" class="active">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+                <a href="/evaluacion">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    Evaluación
+                </a>
+            </nav>
+        </div>
+        <button class="logout-btn" onclick="window.location.href='/logout'">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Cerrar sesión
+        </button>
+    </aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h1 id="bienvenidaMaestro">Bienvenido</h1>
+                <p>Panel de profesor con datos de tus grupos, materias y últimas acciones.</p>
+            </div>
+            <div class="profile-icon">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+        </div>
+
+        <div id="dashboardMensaje" class="form-feedback"></div>
+
+        <div class="cards-grid">
+            <div class="card dashboard-card-link">
+                <i class="fa-solid fa-users"></i>
+                <h2 id="totalGrupos">0</h2>
+                <p>Grupos asignados</p>
+            </div>
+            <div class="card dashboard-card-link">
+                <i class="fa-solid fa-book"></i>
+                <h2 id="totalMaterias">0</h2>
+                <p>Materias asignadas</p>
+            </div>
+            <div class="card dashboard-card-link">
+                <i class="fa-solid fa-user-graduate"></i>
+                <h2 id="totalAlumnos">0</h2>
+                <p>Alumnos atendidos</p>
+            </div>
+            <a class="card dashboard-card-link" href="/mis-grupos">
+                <i class="fa-solid fa-users"></i>
+                <h2>Mis grupos</h2>
+                <p>Ver grupos asignados</p>
+            </a>
+            <a class="card dashboard-card-link" href="/mis-materias">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>Mis materias</h2>
+                <p>Ver tus materias</p>
+            </a>
+            <a class="card dashboard-card-link" href="/evaluacion">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <h2>Evaluación</h2>
+                <p>Registrar calificaciones y asistencias</p>
+            </a>
+        </div>
+
+        <div class="settings-grid">
+            <section class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <div>
+                        <h2>Últimas calificaciones</h2>
+                        <p>Registros recientes de tu carga académica.</p>
+                    </div>
+                </div>
+                <div id="ultimasCalificaciones" class="activity-list"></div>
+            </section>
+            <section class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fa-solid fa-user-check"></i>
+                    <div>
+                        <h2>Últimas asistencias</h2>
+                        <p>Registros recientes de asistencias.</p>
+                    </div>
+                </div>
+                <div id="ultimasAsistencias" class="activity-list"></div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script src="/permisos.js"></script>
+<script src="/js/dashboard_maestro.js"></script>
+</body>
+</html>

@@ -1,13 +1,21 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const Personal = require("../models/Personal");
 const { registrarActividad } = require("./actividades");
+const {
+    obtenerBaseUsuario,
+    generarUsuarioUnico,
+    generarPasswordTemporal
+} = require("../utils/userHelpers");
 
 const router = express.Router();
 
 const CARGOS_VALIDOS = [
     "administrador",
     "coordinador",
+    "profesor",
     "instructor",
     "auxiliar",
     "capturista"
@@ -25,10 +33,11 @@ const cargoVisible = {
     administrador:"Administrador",
     admin:"Administrador",
     coordinador:"Coordinador",
-    instructor:"Instructor",
+    profesor:"Profesor",
+    instructor:"Profesor",
     auxiliar:"Auxiliar",
     capturista:"Capturista",
-    maestro:"Instructor",
+    maestro:"Profesor",
     administrativo:"Auxiliar"
 };
 
@@ -55,11 +64,37 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
         item.cargoTexto =
         cargoVisible[item.cargo] || "Personal";
 
+        item.estado = item.estado || (item.activo === false ? "inactivo" : "activo");
+
         delete item.password;
         delete item.permisos;
 
         return item;
 
+    }
+
+    function rolPorCargo(cargo){
+        if(cargo === "administrador"){
+            return "admin";
+        }
+
+        if(cargo === "profesor" || cargo === "instructor"){
+            return "maestro";
+        }
+
+        return "personal";
+    }
+
+    function permisosPorCargo(cargo){
+        const permisos = {
+            coordinador:["alumnos", "maestros", "materias", "grupos", "evaluacion"],
+            capturista:["alumnos", "materias", "grupos", "evaluacion"],
+            auxiliar:["alumnos", "grupos"],
+            profesor:[],
+            instructor:[]
+        };
+
+        return permisos[cargo] || [];
     }
 
     async function validarCorreoNoAlumno(correo){
@@ -69,7 +104,10 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
 
         const alumno =
         await Alumno.findOne({
-            matricula:correo
+            $or:[
+                { matricula:correo },
+                { correo }
+            ]
         });
 
         return !alumno;
@@ -115,9 +153,9 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
             const cargo =
             normalizarCargo(req.body.cargo);
 
-            if(!req.body.nombre || !req.body.correo || !req.body.password){
+            if(!req.body.nombre || !req.body.correo){
                 return res.status(400).json({
-                    error:"Nombre, correo y contraseña son obligatorios"
+                    error:"Nombre y correo son obligatorios"
                 });
             }
 
@@ -136,26 +174,34 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
                 });
             }
 
-            const existe =
-            await Personal.findOne({
-                usuario:req.body.correo
-            });
+            const Usuario = mongoose.model("Usuario");
 
-            if(existe){
+            const correoUsado = await Usuario.findOne({ correo:req.body.correo });
+
+            if(correoUsado){
                 return res.status(400).json({
                     error:"Ya existe personal con ese correo"
                 });
             }
 
+            const baseUsuario = obtenerBaseUsuario(req.body.correo, req.body.nombre);
+            const usuarioGenerado = await generarUsuarioUnico(baseUsuario, Usuario);
+            const passwordTemporal = req.body.password || generarPasswordTemporal();
+            const estado = req.body.estado || "activo";
+
             const nuevoPersonal =
             new Personal({
                 nombre:req.body.nombre,
                 correo:req.body.correo,
-                usuario:req.body.correo,
-                password:req.body.password,
+                usuario:usuarioGenerado,
+                password:passwordTemporal,
                 cargo,
-                rol:cargo === "administrador" ? "admin" : cargo === "instructor" ? "maestro" : "personal",
-                activo:req.body.activo !== false
+                rol:rolPorCargo(cargo),
+                activo:estado === "activo",
+                estado,
+                primerLogin:true,
+                fechaRestablecimiento:new Date(),
+                permisos:permisosPorCargo(cargo)
             });
 
             await nuevoPersonal.save();
@@ -169,7 +215,9 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
             });
 
             res.json({
-                mensaje:"Personal creado correctamente"
+                mensaje:"Personal creado correctamente",
+                usuario:usuarioGenerado,
+                contrasenaTemporal:passwordTemporal
             });
 
         } catch(error){
@@ -227,7 +275,7 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
 
             const duplicado =
             await Personal.findOne({
-                usuario:req.body.correo,
+                correo:req.body.correo,
                 _id:{
                     $ne:req.params.id
                 }
@@ -242,14 +290,17 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
             const datos = {
                 nombre:req.body.nombre,
                 correo:req.body.correo,
-                usuario:req.body.correo,
                 cargo,
-                rol:cargo === "administrador" ? "admin" : cargo === "instructor" ? "maestro" : "personal",
-                activo:req.body.activo === true
+                rol:rolPorCargo(cargo),
+                activo:req.body.estado === "activo",
+                estado:req.body.estado || "activo",
+                permisos:permisosPorCargo(cargo)
             };
 
             if(req.body.password){
-                datos.password = req.body.password;
+                datos.password = await bcrypt.hash(req.body.password, 10);
+                datos.primerLogin = true;
+                datos.fechaRestablecimiento = new Date();
             }
 
             await Personal.findByIdAndUpdate(
@@ -267,6 +318,69 @@ function crearRutasPersonal(verificarSesion, verificarAdmin){
                 error:"Error actualizando personal"
             });
 
+        }
+
+    });
+
+    router.get("/api/personal/:id",
+    verificarSesion,
+    verificarAdmin,
+    async (req, res) => {
+
+        try {
+            const persona = await Personal.findById(req.params.id);
+
+            if(!persona){
+                return res.status(404).json({ error:"Personal no encontrado" });
+            }
+
+            res.json({
+                ...persona.toObject(),
+                estado: persona.estado || (persona.activo === false ? "inactivo" : "activo")
+            });
+
+        } catch(error){
+            res.status(500).json({ error:"Error obteniendo personal" });
+        }
+
+    });
+
+    router.post("/api/personal/:id/reset-password",
+    verificarSesion,
+    verificarAdmin,
+    async (req, res) => {
+
+        try {
+            const persona = await Personal.findById(req.params.id);
+
+            if(!persona){
+                return res.status(404).json({ error:"Personal no encontrado" });
+            }
+
+            const contrasenaTemporal = generarPasswordTemporal();
+
+            persona.password = await bcrypt.hash(contrasenaTemporal, 10);
+            persona.primerLogin = true;
+            persona.fechaRestablecimiento = new Date();
+
+            await persona.save();
+
+            await registrarActividad({
+                usuario:req.session.usuario.usuario,
+                rol:req.session.usuario.rol,
+                accion:"reset password",
+                modulo:"Personal",
+                descripcion:`Contraseña restablecida para personal: ${persona.nombre}`
+            });
+
+            res.json({
+                mensaje:"Contraseña temporal restablecida",
+                usuario:persona.usuario,
+                contrasenaTemporal
+            });
+
+        } catch(error){
+            res.status(500).json({ error:"Error restableciendo contraseña" });
         }
 
     });

@@ -4,331 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Alumno</title>
-
-    <link rel="stylesheet" href="styles.css">
-
-    <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-
 <body>
-
 <div class="dashboard-container">
-
-    <!-- SIDEBAR -->
-
     <aside class="sidebar">
-
         <div>
-
             <div class="logo">
                 <h2>Sistema Escolar</h2>
                 <p>Portal Alumno</p>
             </div>
 
             <nav>
-
                 <a href="/dashboard_alumno" class="active">
                     <i class="fa-solid fa-house"></i>
                     Inicio
                 </a>
-
-                <a href="#">
+                <a href="#materias">
                     <i class="fa-solid fa-book"></i>
                     Materias
                 </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    Horarios
-                </a>
-
-                <a href="#">
+                <a href="#calificaciones">
                     <i class="fa-solid fa-chart-line"></i>
                     Calificaciones
                 </a>
-
-                <a href="#">
+                <a href="#asistencias">
                     <i class="fa-solid fa-user-check"></i>
                     Asistencias
                 </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-money-bill-wave"></i>
-                    Pagos
-                </a>
-
             </nav>
-
         </div>
 
-        <button class="logout-btn"
-        onclick="window.location.href='/logout'">
-
+        <button class="logout-btn" onclick="window.location.href='/logout'">
             <i class="fa-solid fa-right-from-bracket"></i>
             Cerrar sesión
-
         </button>
-
     </aside>
 
-    <!-- CONTENIDO -->
-
     <main class="main-content">
-
-        <!-- TOPBAR -->
-
         <div class="topbar">
-
             <div>
-                <h1 id="bienvenidaAlumno">
-                    Hola, alumno 👋
-                </h1>
-
-                <p id="subtituloAlumno">
-                    Bienvenido a tu portal académico
-                </p>
+                <h1 id="bienvenidaAlumno">Hola, alumno</h1>
+                <p id="subtituloAlumno">Bienvenido a tu portal académico</p>
             </div>
-
             <div class="profile-icon">
                 <i class="fa-solid fa-user-graduate"></i>
             </div>
-
         </div>
 
-        <!-- INFORMACIÓN DEL ALUMNO -->
-
         <section class="tabla-container alumno-info-card">
-
             <div class="alumno-info-grid">
-
                 <div>
                     <span class="info-label">Nombre</span>
                     <strong id="alumnoNombre">Cargando...</strong>
                 </div>
-
                 <div>
                     <span class="info-label">Matrícula</span>
                     <strong id="alumnoMatricula">Cargando...</strong>
                 </div>
-
+                <div>
+                    <span class="info-label">Grupo</span>
+                    <strong id="alumnoGrupo">Sin grupo asignado</strong>
+                </div>
                 <div>
                     <span class="info-label">Carrera</span>
                     <strong id="alumnoCarrera">Cargando...</strong>
                 </div>
-
                 <div>
                     <span class="info-label">Semestre</span>
                     <strong id="alumnoSemestre">Cargando...</strong>
                 </div>
-
             </div>
-
         </section>
 
-        <!-- CARDS PRINCIPALES -->
-
         <div class="cards-grid dashboard-cards alumno-cards">
-
             <div class="card alumno-card">
                 <i class="fa-solid fa-chart-simple"></i>
-                <h2>9.2</h2>
+                <h2 id="promedioGeneral">--</h2>
                 <p>Promedio general</p>
             </div>
-
             <div class="card alumno-card">
                 <i class="fa-solid fa-book-open"></i>
                 <h2 id="materiasActivas">0</h2>
                 <p>Materias activas</p>
             </div>
-
             <div class="card alumno-card">
                 <i class="fa-solid fa-user-check"></i>
-                <h2>92%</h2>
+                <h2 id="asistenciaGeneral">--</h2>
                 <p>Asistencia</p>
             </div>
-
             <div class="card alumno-card">
                 <i class="fa-solid fa-graduation-cap"></i>
-                <h2>65%</h2>
-                <p>Progreso carrera</p>
+                <h2 id="progresoAcademico">--</h2>
+                <p>Progreso académico</p>
             </div>
-
         </div>
 
-        <!-- MATERIAS INSCRITAS -->
-
-        <section class="tabla-container dashboard-panel">
-
-            <h2>
-                Materias inscritas
-            </h2>
-
+        <section class="tabla-container dashboard-panel" id="materias">
+            <h2>Materias inscritas</h2>
             <div id="materiasInscritasLista" class="horario-list">
-                <p class="empty-state">Cargando materias reales...</p>
+                <p class="empty-state">Cargando materias...</p>
             </div>
-
         </section>
 
-        <!-- GRID PRINCIPAL -->
-
         <div class="dashboard-grid">
-
-            <!-- HORARIO -->
-
-            <section class="tabla-container dashboard-panel">
-
-                <h2>
-                    Horario de hoy
-                </h2>
-
-                <div class="horario-list">
-
-                    <div class="horario-item">
-                        <div>
-                            <strong>Matemáticas</strong>
-                            <p>Salón A-12</p>
-                        </div>
-
-                        <span>8:00 AM</span>
-                    </div>
-
-                    <div class="horario-item">
-                        <div>
-                            <strong>Programación Web</strong>
-                            <p>Laboratorio 2</p>
-                        </div>
-
-                        <span>10:00 AM</span>
-                    </div>
-
-                    <div class="horario-item">
-                        <div>
-                            <strong>Redes</strong>
-                            <p>Salón B-08</p>
-                        </div>
-
-                        <span>1:00 PM</span>
-                    </div>
-
+            <section class="tabla-container dashboard-panel" id="calificaciones">
+                <h2>Calificaciones y evaluación</h2>
+                <div id="calificacionesLista" class="calificaciones-list">
+                    <p class="empty-state">Cargando calificaciones...</p>
                 </div>
-
             </section>
 
-            <!-- CALIFICACIONES -->
-
             <section class="tabla-container dashboard-panel">
-
-                <h2>
-                    Calificaciones recientes
-                </h2>
-
-                <div class="calificaciones-list">
-
-                    <div class="calificacion-item">
-                        <div>
-                            <strong>Matemáticas</strong>
-                            <p>Parcial 1</p>
-                        </div>
-
-                        <span class="badge-success">9</span>
-                    </div>
-
-                    <div class="calificacion-item">
-                        <div>
-                            <strong>Programación</strong>
-                            <p>Proyecto</p>
-                        </div>
-
-                        <span class="badge-success">10</span>
-                    </div>
-
-                    <div class="calificacion-item">
-                        <div>
-                            <strong>Redes</strong>
-                            <p>Examen</p>
-                        </div>
-
-                        <span class="badge-warning">8</span>
-                    </div>
-
+                <h2>Desglose de evaluación</h2>
+                <div id="evaluacionDesgloseLista" class="activity-list">
+                    <p class="empty-state">Cargando desglose...</p>
                 </div>
-
             </section>
 
-            <!-- ACTIVIDAD -->
-
-            <section class="tabla-container dashboard-panel">
-
-                <h2>
-                    Actividad académica
-                </h2>
-
-                <div class="activity-list">
-
-                    <div class="activity-item">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <div>
-                            <strong>Nueva calificación registrada</strong>
-                            <p>Hace 1 hora</p>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <i class="fa-solid fa-book"></i>
-                        <div>
-                            <strong>Tarea agregada en Programación</strong>
-                            <p>Hace 3 horas</p>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <i class="fa-solid fa-user-check"></i>
-                        <div>
-                            <strong>Asistencia registrada</strong>
-                            <p>Hoy</p>
-                        </div>
-                    </div>
-
+            <section class="tabla-container dashboard-panel" id="asistencias">
+                <h2>Asistencias recientes</h2>
+                <div id="asistenciasLista" class="activity-list">
+                    <p class="empty-state">Cargando asistencias...</p>
                 </div>
-
             </section>
 
-            <!-- PAGOS -->
-
             <section class="tabla-container dashboard-panel">
-
-                <h2>
-                    Estado financiero
-                </h2>
-
-                <div class="payment-status">
-
-                    <div class="payment-item">
-                        <span>Último pago</span>
-                        <strong>$1500 - Marzo</strong>
-                    </div>
-
-                    <div class="payment-item">
-                        <span>Estado</span>
-                        <strong class="text-success">
-                            <i class="fa-solid fa-circle-check"></i>
-                            Pagado
-                        </strong>
-                    </div>
-
+                <h2>Actividad académica</h2>
+                <div id="actividadAcademicaLista" class="activity-list">
+                    <p class="empty-state">Cargando actividad...</p>
                 </div>
-
             </section>
-
         </div>
-
     </main>
-
 </div>
 
 <script src="/js/alumno.js"></script>
 </body>
 </html>
-```

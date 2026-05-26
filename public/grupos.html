@@ -70,6 +70,20 @@ Grupos
 
 </a>
 
+<a href="/inscripciones">
+
+<i class="fa-solid fa-pencil"></i>
+Inscripciones
+
+</a>
+
+<a href="/evaluacion">
+
+<i class="fa-solid fa-clipboard-check"></i>
+Evaluación
+
+</a>
+
 <a href="/personal">
 
 <i class="fa-solid fa-people-group"></i>
@@ -123,6 +137,8 @@ Agregar grupo
 
 </div>
 
+<div id="grupoMensaje" class="form-feedback"></div>
+
 <!-- TABLA -->
 
 <div class="tabla-container">
@@ -137,6 +153,8 @@ Agregar grupo
 <th>Semestre</th>
 <th>Carrera</th>
 <th>Tutor</th>
+<th>Alumnos</th>
+<th>Materias</th>
 <th>Estado</th>
 <th>Acciones</th>
 
@@ -249,6 +267,12 @@ function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo")
 
 }
 
+function mostrarGrupoMensaje(texto, tipo = "success"){
+    const mensaje = document.getElementById("grupoMensaje");
+    mensaje.innerText = texto;
+    mensaje.className = `form-feedback ${tipo}`;
+}
+
 // CARGAR GRUPOS
 
 async function cargarGrupos(){
@@ -277,6 +301,10 @@ async function cargarGrupos(){
             <td>${grupo.carrera}</td>
 
             <td>${grupo.tutor}</td>
+
+            <td>${grupo.alumnosCount || 0}</td>
+
+            <td>${grupo.materiasCount || 0}</td>
 
             <td>${estadoBadge(grupo.activo)}</td>
 
@@ -334,7 +362,7 @@ async e => {
 
     if(grupoEditando){
 
-        await fetch(
+        const respuesta = await fetch(
 
         `/api/grupos/${grupoEditando}`,
 
@@ -350,6 +378,15 @@ async e => {
 
         });
 
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            mostrarGrupoMensaje(resultado.error || "Error actualizando grupo", "error");
+            return;
+        }
+
+        mostrarGrupoMensaje(resultado.mensaje || "Grupo actualizado");
+
         grupoEditando = null;
 
     }
@@ -358,7 +395,7 @@ async e => {
 
     else{
 
-        await fetch("/api/grupos", {
+        const respuesta = await fetch("/api/grupos", {
 
             method:"POST",
 
@@ -369,6 +406,15 @@ async e => {
             body:JSON.stringify(datos)
 
         });
+
+        const resultado = await respuesta.json();
+
+        if(!respuesta.ok){
+            mostrarGrupoMensaje(resultado.error || "Error creando grupo", "error");
+            return;
+        }
+
+        mostrarGrupoMensaje(resultado.mensaje || "Grupo creado");
 
     }
 
@@ -387,11 +433,20 @@ async function eliminarGrupo(id){
     if(!confirm("¿Eliminar grupo?"))
     return;
 
-    await fetch(`/api/grupos/${id}`, {
+    const respuesta = await fetch(`/api/grupos/${id}`, {
 
         method:"DELETE"
 
     });
+
+    const resultado = await respuesta.json();
+
+    if(!respuesta.ok){
+        mostrarGrupoMensaje(resultado.error || "Error eliminando grupo", "error");
+        return;
+    }
+
+    mostrarGrupoMensaje(resultado.mensaje || "Grupo eliminado");
 
     cargarGrupos();
 
@@ -406,6 +461,10 @@ function abrirModal(){
     document
     .getElementById("formGrupo")
     .reset();
+
+    document.querySelector(
+    '[name="activo"]'
+    ).checked = true;
 
     document
     .getElementById("modal")

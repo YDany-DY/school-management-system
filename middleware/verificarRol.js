@@ -8,7 +8,8 @@ function normalizarRolSistema(rol){
         capturista:"personal",
         coordinador:"personal",
         auxiliar:"personal",
-        instructor:"maestro"
+        instructor:"maestro",
+        profesor:"maestro"
     };
 
     return equivalencias[rol] || rol;

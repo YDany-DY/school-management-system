@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación académica</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div>
+            <div class="logo">
+                <h2>Sistema Escolar</h2>
+                <p>Evaluación</p>
+            </div>
+            <nav>
+                <a href="/dashboard_admin">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+                <a href="/alumnos">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    Alumnos
+                </a>
+                <a href="/materias">
+                    <i class="fa-solid fa-book"></i>
+                    Materias
+                </a>
+                <a href="/grupos">
+                    <i class="fa-solid fa-users"></i>
+                    Grupos
+                </a>
+                <a href="/inscripciones">
+                    <i class="fa-solid fa-pencil"></i>
+                    Inscripciones
+                </a>
+                <a href="/evaluacion" class="active">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    Evaluación
+                </a>
+                <a href="/personal">
+                    <i class="fa-solid fa-people-group"></i>
+                    Personal
+                </a>
+            </nav>
+        </div>
+
+        <button class="logout-btn" onclick="window.location.href='/logout'">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Cerrar sesión
+        </button>
+    </aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <h1>Evaluación académica</h1>
+                <p>Registro de criterios, calificaciones y asistencias.</p>
+            </div>
+            <div class="profile-icon">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+        </div>
+
+        <div id="evaluacionMensaje" class="form-feedback"></div>
+
+        <div class="settings-grid">
+            <section id="criteriosSection" class="settings-card settings-card-wide">
+                <div class="settings-card-header settings-header-actions">
+                    <div class="settings-title-group">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <div>
+                            <h2>Criterios de evaluación</h2>
+                            <p>Porcentajes por materia, grupo y periodo.</p>
+                        </div>
+                    </div>
+                    <button class="add-btn settings-action" id="btnAgregarComponente" type="button">
+                        <i class="fa-solid fa-plus"></i>
+                        Componente
+                    </button>
+                </div>
+
+                <form id="criterioForm" class="settings-form">
+                    <input type="hidden" id="criterioId">
+                    <div class="form-row">
+                        <label>
+                            Nombre
+                            <input type="text" id="criterioNombre" placeholder="Parcial 1" required>
+                        </label>
+                        <label>
+                            Periodo
+                            <input type="text" id="criterioPeriodo" placeholder="Parcial 1" required>
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label>
+                            Materia
+                            <select id="criterioMateria" required></select>
+                        </label>
+                        <label>
+                            Grupo
+                            <select id="criterioGrupo"></select>
+                        </label>
+                    </div>
+                    <div id="criterioComponentes" class="componentes-list"></div>
+                    <div class="evaluation-total">
+                        <span>Total</span>
+                        <strong id="criterioTotal">0%</strong>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="cancel-btn" id="btnLimpiarCriterio">Limpiar</button>
+                        <button type="submit" class="save-btn">Guardar criterio</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="calificacionesSection" class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <div>
+                        <h2>Calificaciones</h2>
+                        <p>Registro por alumno y periodo.</p>
+                    </div>
+                </div>
+
+                <form id="calificacionForm" class="settings-form">
+                    <input type="hidden" id="calificacionId">
+                    <label>
+                        Alumno
+                        <select id="calificacionAlumno" required></select>
+                    </label>
+                    <label>
+                        Materia
+                        <select id="calificacionMateria" required></select>
+                    </label>
+                    <label>
+                        Grupo
+                        <select id="calificacionGrupo"></select>
+                    </label>
+                    <label>
+                        Criterio
+                        <select id="calificacionCriterio"></select>
+                    </label>
+                    <label>
+                        Periodo
+                        <input type="text" id="calificacionPeriodo" placeholder="Parcial 1" required>
+                    </label>
+                    <div id="calificacionComponentes" class="componentes-list"></div>
+                    <label id="calificacionDirectaWrap">
+                        Calificación final
+                        <input type="number" id="calificacionDirecta" min="0" max="10" step="0.1" placeholder="0 - 10">
+                    </label>
+                    <div class="evaluation-total">
+                        <span>Final</span>
+                        <strong id="calificacionFinal">0</strong>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="cancel-btn" id="btnLimpiarCalificacion">Limpiar</button>
+                        <button type="submit" class="save-btn">Guardar calificación</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="asistenciasSection" class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fa-solid fa-user-check"></i>
+                    <div>
+                        <h2>Asistencias</h2>
+                        <p>Presente, falta o retardo.</p>
+                    </div>
+                </div>
+
+                <form id="asistenciaForm" class="settings-form">
+                    <input type="hidden" id="asistenciaId">
+                    <label>
+                        Alumno
+                        <select id="asistenciaAlumno" required></select>
+                    </label>
+                    <label>
+                        Materia
+                        <select id="asistenciaMateria"></select>
+                    </label>
+                    <label>
+                        Grupo
+                        <select id="asistenciaGrupo"></select>
+                    </label>
+                    <label>
+                        Fecha
+                        <input type="date" id="asistenciaFecha" required>
+                    </label>
+                    <label>
+                        Estado
+                        <select id="asistenciaEstado" required>
+                            <option value="presente">Presente</option>
+                            <option value="falta">Falta</option>
+                            <option value="retardo">Retardo</option>
+                        </select>
+                    </label>
+                    <div class="modal-buttons">
+                        <button type="button" class="cancel-btn" id="btnLimpiarAsistencia">Limpiar</button>
+                        <button type="submit" class="save-btn">Guardar asistencia</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="settings-card settings-card-wide">
+                <div class="settings-card-header">
+                    <i class="fa-solid fa-list-check"></i>
+                    <div>
+                        <h2>Registros recientes</h2>
+                        <p>Últimos criterios, calificaciones y asistencias.</p>
+                    </div>
+                </div>
+
+                <div class="records-grid">
+                    <div>
+                        <h3>Criterios</h3>
+                        <div id="listaCriterios" class="activity-list"></div>
+                    </div>
+                    <div>
+                        <h3>Calificaciones</h3>
+                        <div id="listaCalificaciones" class="activity-list"></div>
+                    </div>
+                    <div>
+                        <h3>Asistencias</h3>
+                        <div id="listaAsistencias" class="activity-list"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script src="/permisos.js"></script>
+<script src="/js/evaluacion.js"></script>
+</body>
+</html>
