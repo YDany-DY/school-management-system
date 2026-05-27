@@ -22,7 +22,7 @@ Sistema escolar con Node.js, Express, MongoDB/Mongoose, sesiones, roles y módul
 - `maestro`: acceso al panel de profesor y evaluación.
 - `alumno`: acceso solo al portal del alumno.
 
-## Ejecutar
+## Instalación y ejecución
 
 ```bash
 npm install
@@ -36,11 +36,30 @@ También puedes arrancar directamente con:
 node server.js
 ```
 
-Abre:
+Abre en el navegador:
 
 ```text
 http://localhost:3000
 ```
+
+## Tecnologías principales
+
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- express-session
+- bcrypt
+
+## Estructura del proyecto
+
+- `server.js` — servidor principal, rutas y configuración general
+- `routes/` — controladores por módulo para alumnos, maestros, materias, grupos, inscripciones, evaluación y más
+- `models/` — esquemas de Mongoose para los datos de la aplicación
+- `public/` — HTML, CSS y scripts del frontend
+- `middleware/` — verificación de sesión, roles y permisos
+- `scripts/` — utilidades de datos demo
+- `utils/` — funciones reutilizables de usuario y generación de contraseñas
 
 ## Usuarios Demo
 

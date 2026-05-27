@@ -31,6 +31,15 @@ async function aplicarPermisosSidebar(){
         return;
     }
 
+    if(usuario.rol === "alumno"){
+        if(nav){
+            nav.innerHTML = `
+                ${crearLink("/dashboard_alumno", "fa-house", "Inicio")} 
+            `;
+        }
+        return;
+    }
+
     if(usuario.rol === "personal"){
         const permisos = usuario.permisos || [];
         const modulos = {

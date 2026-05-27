@@ -287,20 +287,16 @@ Cerrar
 let alumnoEditando = null;
 let gruposAlumno = [];
 
-function estadoBadge(activo, textoActivo = "Activo", textoInactivo = "Inactivo"){
-
-    const clase =
-    activo ? "active-status" : "inactive-status";
-
-    const texto =
-    activo ? textoActivo : textoInactivo;
+function estadoBadge(estado){
+    const activo = estado === "activo";
+    const clase = activo ? "active-status" : "inactive-status";
+    const texto = estado === "activo" ? "Activo" : estado === "suspendido" ? "Suspendido" : "Inactivo";
 
     return `
     <span class="status-badge ${clase}">
         <i class="fa-solid fa-circle"></i>
         ${texto}
     </span>`;
-
 }
 
 async function cargarOpcionesAlumno(){
@@ -563,8 +559,6 @@ async e => {
 async function eliminarAlumno(btn) {
     const id = btn.getAttribute("data-alumno-id");
     
-    console.log("ID obtenido del botón:", id);
-    
     if (!id || id.trim() === "") {
         mostrarAlumnoMensaje("Error: ID de alumno no válido", "error");
         return;
@@ -577,17 +571,11 @@ async function eliminarAlumno(btn) {
     limpiarAlumnoMensaje();
     
     try {
-        const url = `/api/alumnos/${id}`;
-        console.log("Enviando DELETE a:", url);
-        
-        const respuesta = await fetch(url, {
+        const respuesta = await fetch(`/api/alumnos/${id}`, {
             method: "DELETE"
         });
 
-        console.log("Respuesta status:", respuesta.status);
-
         const resultado = await respuesta.json();
-        console.log("Resultado:", resultado);
 
         if (!respuesta.ok) {
             mostrarAlumnoMensaje(resultado.error || "Error eliminando alumno", "error");

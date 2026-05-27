@@ -44,8 +44,6 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
     });
 
     router.post("/api/maestros", verificarSesion, verificarAdminPersonal, async (req, res) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
             const Maestro = mongoose.model("Maestro");
             const Usuario = mongoose.model("Usuario");
@@ -56,13 +54,11 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
             const estado = String(req.body.estado || "activo").trim();
 
             if (!nombre || !correo) {
-                await session.abortTransaction();
                 return res.status(400).json({ error: "Nombre y correo son obligatorios" });
             }
 
-            const correoExistente = await Usuario.exists({ correo }).session(session);
+            const correoExistente = await Usuario.exists({ correo });
             if (correoExistente) {
-                await session.abortTransaction();
                 return res.status(400).json({ error: "Ya existe un usuario con ese correo" });
             }
 
@@ -82,7 +78,7 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
                 fechaRestablecimiento: new Date()
             });
 
-            await nuevoUsuario.save({ session });
+            await nuevoUsuario.save();
 
             const nuevoMaestro = new Maestro({
                 nombre,
@@ -92,10 +88,7 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
                 estado
             });
 
-            await nuevoMaestro.save({ session });
-
-            await session.commitTransaction();
-            session.endSession();
+            await nuevoMaestro.save();
 
             res.status(201).json({
                 mensaje: "Maestro creado correctamente",
@@ -103,23 +96,18 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
                 contrasenaTemporal
             });
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
             console.error(error);
             res.status(500).json({ error: "Error creando maestro" });
         }
     });
 
     router.put("/api/maestros/:id", verificarSesion, verificarAdminPersonal, async (req, res) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
             const Maestro = mongoose.model("Maestro");
             const Usuario = mongoose.model("Usuario");
 
-            const maestro = await Maestro.findById(req.params.id).session(session);
+            const maestro = await Maestro.findById(req.params.id);
             if (!maestro) {
-                await session.abortTransaction();
                 return res.status(404).json({ error: "Maestro no encontrado" });
             }
 
@@ -129,19 +117,16 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
             const estado = String(req.body.estado || "activo").trim();
 
             if (!nombre || !correo) {
-                await session.abortTransaction();
                 return res.status(400).json({ error: "Nombre y correo son obligatorios" });
             }
 
-            const usuario = await Usuario.findOne({ correo: maestro.correo }).session(session);
+            const usuario = await Usuario.findOne({ correo: maestro.correo });
             if (!usuario) {
-                await session.abortTransaction();
                 return res.status(404).json({ error: "Usuario del maestro no encontrado" });
             }
 
-            const correoDuplicado = await Usuario.findOne({ correo, _id: { $ne: usuario._id } }).session(session);
+            const correoDuplicado = await Usuario.findOne({ correo, _id: { $ne: usuario._id } });
             if (correoDuplicado) {
-                await session.abortTransaction();
                 return res.status(400).json({ error: "Ya existe otro usuario con ese correo" });
             }
 
@@ -152,21 +137,17 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
                 usuario.primerLogin = true;
                 usuario.fechaRestablecimiento = new Date();
             }
-            await usuario.save({ session });
+            await usuario.save();
 
             maestro.nombre = nombre;
             maestro.correo = correo;
             maestro.especialidad = especialidad;
             maestro.activo = estado === "activo";
             maestro.estado = estado;
-            await maestro.save({ session });
+            await maestro.save();
 
-            await session.commitTransaction();
-            session.endSession();
             res.json({ mensaje: "Maestro actualizado correctamente" });
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
             console.error(error);
             res.status(500).json({ error: "Error actualizando maestro" });
         }
@@ -201,28 +182,20 @@ function crearRutasMaestros(verificarSesion, verificarRol) {
     });
 
     router.delete("/api/maestros/:id", verificarSesion, verificarAdminPersonal, async (req, res) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
             const Maestro = mongoose.model("Maestro");
             const Usuario = mongoose.model("Usuario");
 
-            const maestro = await Maestro.findById(req.params.id).session(session);
+            const maestro = await Maestro.findById(req.params.id);
             if (!maestro) {
-                await session.abortTransaction();
                 return res.status(404).json({ error: "Maestro no encontrado" });
             }
 
-            await Maestro.findByIdAndDelete(maestro._id).session(session);
-            await Usuario.findOneAndDelete({ correo: maestro.correo }).session(session);
-
-            await session.commitTransaction();
-            session.endSession();
+            await Maestro.findByIdAndDelete(maestro._id);
+            await Usuario.findOneAndDelete({ correo: maestro.correo });
 
             res.json({ mensaje: "Maestro eliminado correctamente" });
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
             console.error(error);
             res.status(500).json({ error: "Error eliminando maestro" });
         }
