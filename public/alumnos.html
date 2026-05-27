@@ -355,6 +355,11 @@ async function cargarAlumnos(){
     const res =
     await fetch("/api/alumnos");
 
+    if (!res.ok) {
+        mostrarAlumnoMensaje("Error cargando alumnos", "error");
+        return;
+    }
+
     const alumnos =
     await res.json();
 
@@ -364,6 +369,15 @@ async function cargarAlumnos(){
     tabla.innerHTML = "";
 
     alumnos.forEach(alumno => {
+
+        const grupoId = alumno.grupoId && typeof alumno.grupoId === "object" 
+            ? alumno.grupoId._id 
+            : (alumno.grupoId || "");
+        
+        const estado = alumno.estado || (alumno.activo !== false ? "activo" : "inactivo");
+        
+        // Convertir _id a string para asegurar que se asigna correctamente
+        const alumnoId = String(alumno._id || "");
 
         tabla.innerHTML += `
 
@@ -381,22 +395,21 @@ async function cargarAlumnos(){
 
             <td>${alumno.semestre}</td>
 
-            <td>${estadoBadge(alumno.estado || (alumno.activo !== false ? "activo" : "inactivo"))}</td>
+            <td>${estadoBadge(estado)}</td>
 
             <td>
 
                 <button
 class="edit-btn"
-onclick="editarAlumno(
-'${alumno._id}',
-	'${alumno.nombre}',
-	'${alumno.matricula}',
-    '${alumno.correo || ""}',
-	'${alumno.carrera}',
-	'${alumno.semestre}',
-    '${alumno.grupoId && alumno.grupoId._id ? alumno.grupoId._id : alumno.grupoId || ""}',
-	'${alumno.estado || (alumno.activo !== false ? "activo" : "inactivo")}'
-	)">
+data-alumno-id="${alumnoId}"
+data-alumno-nombre="${(alumno.nombre || "").replace(/"/g, '&quot;')}"
+data-alumno-matricula="${(alumno.matricula || "").replace(/"/g, '&quot;')}"
+data-alumno-correo="${(alumno.correo || "").replace(/"/g, '&quot;')}"
+data-alumno-carrera="${(alumno.carrera || "").replace(/"/g, '&quot;')}"
+data-alumno-semestre="${alumno.semestre || ""}"
+data-alumno-grupo="${grupoId}"
+data-alumno-estado="${estado}"
+onclick="editarAlumnoDesdeBtn(this)">
 
 Editar
 
@@ -404,7 +417,8 @@ Editar
 
 <button
 class="reset-btn"
-onclick="resetearContrasenaAlumno('${alumno._id}')">
+data-alumno-id="${alumnoId}"
+onclick="resetearContrasenaAlumno(this)">
 
 Reset contraseña
 
@@ -412,7 +426,8 @@ Reset contraseña
 
 <button
 class="delete-btn"
-onclick="eliminarAlumno('${alumno._id}')">
+data-alumno-id="${alumnoId}"
+onclick="eliminarAlumno(this)">
 
 Eliminar
 
@@ -455,36 +470,46 @@ async e => {
 
     datos.estado = form.get("estado") || "activo";
 
+    limpiarAlumnoMensaje();
+
     // EDITAR
 
     if(alumnoEditando){
 
-        const respuesta = await fetch(
+        try {
+            const respuesta = await fetch(
 
-        `/api/alumnos/${alumnoEditando}`,
+            `/api/alumnos/${alumnoEditando}`,
 
-        {
+            {
 
-            method:"PUT",
+                method:"PUT",
 
-            headers:{
-                "Content-Type":"application/json"
-            },
+                headers:{
+                    "Content-Type":"application/json"
+                },
 
-            body:JSON.stringify(datos)
+                body:JSON.stringify(datos)
 
-        });
+            });
 
-        const resultado = await respuesta.json();
+            const resultado = await respuesta.json();
 
-        if(!respuesta.ok){
-            mostrarAlumnoMensaje(resultado.error || "Error actualizando alumno", "error");
-            return;
+            if(!respuesta.ok){
+                mostrarAlumnoMensaje(resultado.error || "Error actualizando alumno", "error");
+                return;
+            }
+
+            mostrarAlumnoMensaje(resultado.mensaje || "Alumno actualizado correctamente");
+
+            cerrarModal();
+            cargarAlumnos();
+            e.target.reset();
+            alumnoEditando = null;
+        } catch (error) {
+            console.error("Error:", error);
+            mostrarAlumnoMensaje("Error de conexión al actualizar alumno", "error");
         }
-
-        mostrarAlumnoMensaje(resultado.mensaje || "Alumno actualizado");
-
-        alumnoEditando = null;
 
     }
 
@@ -492,92 +517,126 @@ async e => {
 
     else{
 
-        const respuesta = await fetch("/api/alumnos", {
+        try {
+            const respuesta = await fetch("/api/alumnos", {
 
-            method:"POST",
+                method:"POST",
 
-            headers:{
-                "Content-Type":"application/json"
-            },
+                headers:{
+                    "Content-Type":"application/json"
+                },
 
-            body:JSON.stringify(datos)
+                body:JSON.stringify(datos)
 
-        });
+            });
 
-        const resultado = await respuesta.json();
+            const resultado = await respuesta.json();
 
-        if (!respuesta.ok) {
-            mostrarAlumnoMensaje(resultado.error || "Error creando alumno", "error");
-            return;
+            if (!respuesta.ok) {
+                mostrarAlumnoMensaje(resultado.error || "Error creando alumno", "error");
+                return;
+            }
+
+            const usuarioTemporal = resultado.usuario || datos.matricula || "Alumno";
+            const contrasenaTemporal = resultado.contrasenaTemporal || "";
+
+            mostrarAlumnoMensaje(
+                `Alumno registrado correctamente. Copia la contraseña temporal antes de cerrar.`
+            );
+
+            mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "Este usuario deberá cambiarla en su primer acceso.");
+
+            cerrarModal();
+            cargarAlumnos();
+            e.target.reset();
+        } catch (error) {
+            console.error("Error:", error);
+            mostrarAlumnoMensaje("Error de conexión al crear alumno", "error");
         }
 
-        console.log("Crear alumno resultado:", resultado);
-        const usuarioTemporal = resultado.usuario || datos.matricula || "Alumno";
-        const contrasenaTemporal = resultado.contrasenaTemporal || datos.matricula || "";
-
-        mostrarAlumnoMensaje(
-            `Alumno registrado correctamente. Copia la contraseña temporal antes de cerrar.`
-        );
-
-        mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "Este usuario deberá cambiarla en su primer acceso.");
-
     }
-
-    cerrarModal();
-
-    cargarAlumnos();
-
-    e.target.reset();
 
 });
 
 // ELIMINAR
 
-async function eliminarAlumno(id){
+async function eliminarAlumno(btn) {
+    const id = btn.getAttribute("data-alumno-id");
+    
+    console.log("ID obtenido del botón:", id);
+    
+    if (!id || id.trim() === "") {
+        mostrarAlumnoMensaje("Error: ID de alumno no válido", "error");
+        return;
+    }
+    
+    if (!confirm("¿Eliminar alumno? Esta acción no se puede deshacer.")) {
+        return;
+    }
 
-    if(!confirm("¿Eliminar alumno?"))
-    return;
+    limpiarAlumnoMensaje();
+    
+    try {
+        const url = `/api/alumnos/${id}`;
+        console.log("Enviando DELETE a:", url);
+        
+        const respuesta = await fetch(url, {
+            method: "DELETE"
+        });
 
-    await fetch(`/api/alumnos/${id}`, {
+        console.log("Respuesta status:", respuesta.status);
 
-        method:"DELETE"
+        const resultado = await respuesta.json();
+        console.log("Resultado:", resultado);
 
-    });
+        if (!respuesta.ok) {
+            mostrarAlumnoMensaje(resultado.error || "Error eliminando alumno", "error");
+            return;
+        }
 
-    cargarAlumnos();
-
+        mostrarAlumnoMensaje(resultado.mensaje || "Alumno eliminado correctamente");
+        cargarAlumnos();
+    } catch (error) {
+        console.error("Error al eliminar:", error);
+        mostrarAlumnoMensaje("Error de conexión al eliminar alumno: " + error.message, "error");
+    }
 }
 
 // RESET CONTRASEÑA
 
-async function resetearContrasenaAlumno(id) {
-    if (!confirm("¿Restablecer contraseña temporal para este alumno?")) {
+async function resetearContrasenaAlumno(btn) {
+    const id = btn.getAttribute("data-alumno-id");
+    
+    if (!id || !confirm("¿Restablecer contraseña temporal para este alumno?")) {
         return;
     }
 
-    const respuesta = await fetch(`/api/alumnos/${id}/reset-password`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
+    limpiarAlumnoMensaje();
+
+    try {
+        const respuesta = await fetch(`/api/alumnos/${id}/reset-password`, {
+            method: "POST"
+        });
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) {
+            mostrarAlumnoMensaje(resultado.error || "Error restableciendo contraseña", "error");
+            return;
         }
-    });
 
-    const resultado = await respuesta.json();
+        const usuarioTemporal = resultado.usuario || "Alumno";
+        const contrasenaTemporal = resultado.contrasenaTemporal || "";
 
-    if (!respuesta.ok) {
-        mostrarAlumnoMensaje(resultado.error || "Error restableciendo contraseña", "error");
-        return;
+        mostrarAlumnoMensaje(
+            `Contraseña temporal restablecida. Copia el código y entrégalo al alumno.`
+        );
+
+        mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "El alumno deberá cambiar esta contraseña en su primer acceso.");
+    } catch (error) {
+        console.error("Error:", error);
+        mostrarAlumnoMensaje("Error de conexión al restablecer contraseña", "error");
     }
-
-    console.log("Reset contraseña resultado:", resultado);
-    const usuarioTemporal = resultado.usuario || "Alumno";
-    const contrasenaTemporal = resultado.contrasenaTemporal || "";
-
-    mostrarAlumnoMensaje(
-        `Contraseña temporal restablecida. Copia el código y entrégalo al alumno.`
-    );
-
-    mostrarCredencialModal(usuarioTemporal, contrasenaTemporal, "El alumno deberá cambiar esta contraseña en su primer acceso.");
 }
 
 // MODAL
@@ -586,6 +645,9 @@ function abrirModal(nuevo = true){
 
     if(nuevo){
         alumnoEditando = null;
+
+        // Cambiar título del modal
+        document.querySelector('#modal h2').innerText = "Nuevo alumno";
 
         document
         .getElementById("formAlumno")
@@ -603,6 +665,8 @@ function cerrarModal(){
     document
     .getElementById("modal")
     .style.display = "none";
+
+    limpiarAlumnoMensaje();
 
 }
 function mostrarCredencialModal(usuario, contrasena, nota) {
@@ -637,6 +701,9 @@ estado
 
     alumnoEditando = id;
 
+    // Cambiar título del modal
+    document.querySelector('#modal h2').innerText = "Editar alumno";
+
     abrirModal(false);
 
     document.querySelector(
@@ -667,6 +734,20 @@ estado
     '[name="estado"]'
     ).value = estado || "activo";
 
+}
+
+// Nueva función para editar desde el botón con data-attributes
+function editarAlumnoDesdeBtn(btn) {
+    const id = btn.getAttribute("data-alumno-id");
+    const nombre = btn.getAttribute("data-alumno-nombre") || "";
+    const matricula = btn.getAttribute("data-alumno-matricula") || "";
+    const correo = btn.getAttribute("data-alumno-correo") || "";
+    const carrera = btn.getAttribute("data-alumno-carrera") || "";
+    const semestre = btn.getAttribute("data-alumno-semestre") || "";
+    const grupo = btn.getAttribute("data-alumno-grupo") || "";
+    const estado = btn.getAttribute("data-alumno-estado") || "activo";
+
+    editarAlumno(id, nombre, matricula, correo, carrera, semestre, grupo, estado);
 }
 // INICIAR
 

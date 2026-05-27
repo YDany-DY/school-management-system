@@ -18,6 +18,10 @@ const {
     crearRutasActividades,
     registrarActividad
 } = require("./routes/actividades");
+const crearRutasAlumnos = require("./routes/alumnos");
+const crearRutasMaestros = require("./routes/maestros");
+const crearRutasMaterias = require("./routes/materias");
+const crearRutasGrupos = require("./routes/grupos");
 const {
     verificarSesion,
     verificarRol,
@@ -250,6 +254,30 @@ app.use(
 crearRutasActividades(
 verificarSesion,
 verificarAdmin
+));
+
+app.use(
+crearRutasAlumnos(
+verificarSesion,
+verificarRol
+));
+
+app.use(
+crearRutasMaestros(
+verificarSesion,
+verificarRol
+));
+
+app.use(
+crearRutasMaterias(
+verificarSesion,
+verificarRol
+));
+
+app.use(
+crearRutasGrupos(
+verificarSesion,
+verificarRol
 ));
 
 app.use(
