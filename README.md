@@ -1,72 +1,31 @@
-# Sistema Escolar
+# 🏫 Sistema de Gestión Escolar (School Management System)
 
-Sistema escolar con Node.js, Express, MongoDB/Mongoose, sesiones, roles y módulos administrativos.
+Un sistema web completo diseñado para la administración escolar eficiente, que implementa control de acceso basado en roles (RBAC) para administradores, docentes y estudiantes.
 
-## Funcionalidades
+---
 
-- Login con sesión y redirección por rol.
-- Dashboards para administrador, personal, profesor y alumno.
-- CRUD de alumnos, materias, grupos, profesores y personal.
-- Generación de usuario y contraseña temporal para alumnos y personal.
-- Inscripciones de alumnos a materias y grupos.
-- Evaluación académica con criterios por materia/grupo, porcentajes que suman 100%, calificaciones por periodo y cálculo automático.
-- Registro de asistencias y cálculo de porcentaje para el alumno.
-- Dashboard de alumno con nombre, grupo, materias, calificaciones, promedio, asistencias y progreso con datos reales.
-- Actividades recientes para acciones importantes del sistema.
-- Script de datos demo para presentación.
+## 🚀 Características Principales
 
-## Roles
+- **Autenticación y Roles:** Control de acceso diferenciado según el tipo de usuario (Administrador, Maestro, Alumno).
+- **Módulo de Administrador:** Gestión e inscripción de usuarios y configuración general.
+- **Módulo de Maestros:** Asignación de calificaciones, registro de asistencias y gestión de cursos.
+- **Módulo de Alumnos:** Consulta de historial académico, calificaciones y perfil personal.
 
-- `admin`: acceso total.
-- `personal`: acceso según permisos y cargo.
-- `maestro`: acceso al panel de profesor y evaluación.
-- `alumno`: acceso solo al portal del alumno.
+---
 
-## Instalación y ejecución
+## 🛠️ Tecnologías Utilizadas
 
-```bash
-npm install
-npm run seed
-npm start
-```
+- **Frontend:** HTML5, CSS3, JavaScript (ES6+)
+- **Backend:** Node.js, Express.js
+- **Base de Datos:** MongoDB
 
-También puedes arrancar directamente con:
+---
 
-```bash
-node server.js
-```
+## ⚙️ Instalación y Configuración Local
 
-Abre en el navegador:
+Sigue estos pasos para ejecutar el proyecto localmente:
 
-```text
-http://localhost:3000
-```
-
-## Tecnologías principales
-
-- Node.js
-- Express
-- MongoDB
-- Mongoose
-- express-session
-- bcrypt
-
-## Estructura del proyecto
-
-- `server.js` — servidor principal, rutas y configuración general
-- `routes/` — controladores por módulo para alumnos, maestros, materias, grupos, inscripciones, evaluación y más
-- `models/` — esquemas de Mongoose para los datos de la aplicación
-- `public/` — HTML, CSS y scripts del frontend
-- `middleware/` — verificación de sesión, roles y permisos
-- `scripts/` — utilidades de datos demo
-- `utils/` — funciones reutilizables de usuario y generación de contraseñas
-
-## Usuarios Demo
-
-Después de `npm run seed`:
-
-- Administrador: `admin` / `123456`
-- Alumno: `A001` / `alumno123`
-- Alumno: `A002` / `alumno123`
-
-MongoDB debe estar disponible en `mongodb://127.0.0.1:27017/sistema_escolar`.
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/YDany-DY/school-management-system.git](https://github.com/YDany-DY/school-management-system.git)
+   cd school-management-system
